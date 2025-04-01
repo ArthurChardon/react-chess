@@ -1,10 +1,11 @@
 import "./styles.css";
 import "./App.css";
+import Board from "./components/Board";
 
 function App() {
   return (
     <>
-      <h1>Hello there!</h1>
+      <Board/>
     </>
   );
 }
