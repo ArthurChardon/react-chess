@@ -17,3 +17,8 @@
 .light-cell {
     background-color: #fefae0;
 }
+
+.piece-cell {
+    width: 100%;
+    height: 100%;
+}
