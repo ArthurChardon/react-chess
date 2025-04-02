@@ -27,8 +27,11 @@ export default function Cell({
   }
 
   return (
-    <div className={"cell " + (dark ? "dark-cell" : "light-cell")} ref={dropRef}>
-      {piece && <Piece piece={piece} left={0} top={0}></Piece>}
+    <div
+      className={"cell " + (dark ? "dark-cell" : "light-cell")}
+      ref={dropRef}
+    >
+      {piece && <Piece piece={piece}></Piece>}
       {isOver && (
         <div
           style={{
