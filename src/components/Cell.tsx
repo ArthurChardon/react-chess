@@ -1,4 +1,6 @@
+import { useDrop } from "react-dnd";
 import "./Cell.css";
+import Piece from "./Piece";
 
 export default function Cell({
   coords,
@@ -9,19 +11,36 @@ export default function Cell({
   dark?: boolean;
   piece?: { value: string; color: string };
 }) {
-  function pieceToSymbol(
-    piece: { value: string; color: string } | undefined
-  ): string {
-    if (!piece) return "";
-    return piece.color + piece.value.toUpperCase();
+  const [{ isOver }, dropRef] = useDrop(
+    () => ({
+      accept: "piece",
+      drop: () => movePiece(coords),
+      collect: (monitor) => ({
+        isOver: !!monitor.isOver(),
+      }),
+    }),
+    [coords]
+  );
+
+  function movePiece(newCoords: [string, number] | undefined) {
+    console.log("Move piece to: ", newCoords);
   }
 
   return (
-    <div className={"cell " + (dark ? "dark-cell" : "light-cell")}>
-      {piece && (
-        <img
-          className="piece-cell"
-          src={"svg/" + pieceToSymbol(piece) + ".svg"}
+    <div className={"cell " + (dark ? "dark-cell" : "light-cell")} ref={dropRef}>
+      {piece && <Piece piece={piece} left={0} top={0}></Piece>}
+      {isOver && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            height: "100%",
+            width: "100%",
+            zIndex: 1,
+            opacity: 0.5,
+            backgroundColor: "yellow",
+          }}
         />
       )}
     </div>

@@ -1,0 +1,5 @@
+.piece-cell {
+  width: 6rem;
+  height: 6rem;
+  -webkit-user-drag: none;
+}
