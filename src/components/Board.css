@@ -1,7 +1,7 @@
 .board {
-    display: grid;
-    position: relative;
-    grid-template-columns: repeat(8, 1fr);
-    grid-template-rows: repeat(8, 1fr);
-    border: 2px solid #000;
+  display: grid;
+  position: relative;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  border: 2px solid #000;
 }

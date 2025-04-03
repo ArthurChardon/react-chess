@@ -1,6 +1,8 @@
 import { useDrop } from "react-dnd";
+
 import "./Cell.css";
 import Piece from "./Piece";
+import { PieceT } from "../types/pieces";
 
 export default function Cell({
   coords,
@@ -9,7 +11,7 @@ export default function Cell({
 }: {
   coords?: [string, number];
   dark?: boolean;
-  piece?: { value: string; color: string };
+  piece?: PieceT;
 }) {
   const [{ isOver }, dropRef] = useDrop(
     () => ({
@@ -19,8 +21,10 @@ export default function Cell({
         isOver: !!monitor.isOver(),
       }),
     }),
-    [coords]
+    [coords],
   );
+
+  let isValidCell = false;
 
   function movePiece(newCoords: [string, number] | undefined) {
     console.log("Move piece to: ", newCoords);
@@ -31,8 +35,10 @@ export default function Cell({
       className={"cell " + (dark ? "dark-cell" : "light-cell")}
       ref={dropRef}
     >
-      {piece && <Piece piece={piece}></Piece>}
-      {isOver && (
+      <div style={{ position: "absolute", pointerEvents: "none" }}>      {coords}
+      </div>
+      {piece && <Piece piece={piece} coords={coords}></Piece>}
+      {isOver && isValidCell && (
         <div
           style={{
             position: "absolute",

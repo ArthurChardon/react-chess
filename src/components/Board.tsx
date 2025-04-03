@@ -1,37 +1,62 @@
 import { useState } from "react";
-import { DndProvider } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
+import { useDragLayer } from "react-dnd";
 
 import { initialBoard } from "../utils/initialBoard";
 import Cell from "./Cell";
 import "./Board.css";
 import DragLayer from "./DragLayer";
-import { TouchBackend } from "react-dnd-touch-backend";
+import { PieceT } from "../types/pieces";
+import { MovesController } from "../utils/chessMoves";
 
-export default function Board() {
+let draggingPositionComputed = false;
+
+export default function Board({ convertCases, revertCases }: { convertCases: Map<string, number>, revertCases: Map<number, string> }) {
   const [pieceMap, setPieceMap] = useState(
-    new Map<string, { value: string; color: string }>(
+    new Map<string, PieceT>(
       initialBoard.map((piece) => [
         piece.coords,
-        { value: piece.value, color: piece.color },
-      ])
-    )
+        { type: piece.type, color: piece.color },
+      ]),
+    ),
   );
 
-  const [draggedPiece, setDraggedPiece] = useState<any>({left: 0, top: 0});
+  const { itemType, isDragging, item, initialOffset, currentOffset } =
+    useDragLayer((monitor) => ({
+      item: monitor.getItem(),
+      itemType: monitor.getItemType(),
+      initialOffset: monitor.getInitialSourceClientOffset(),
+      currentOffset: monitor.getSourceClientOffset(),
+      isDragging: monitor.isDragging(),
+    }));
+
+  if (isDragging && !draggingPositionComputed) {
+    const piece = item.piece;
+    const pieceCoords = item.coords.join("");
+    const pieceColor = piece.color;
+    const pieceValue = piece.type;
+    const controller = new MovesController(pieceMap, convertCases, revertCases);
+    console.log(piece);
+    draggingPositionComputed = true;
+    console.log(controller.availableMovesFrom(pieceValue, pieceColor, pieceCoords))
+
+  }
+
+  if (!isDragging) {
+    draggingPositionComputed = false;
+  }
 
   function updateMap(key: string, value: string, color: string) {
     setPieceMap((map) => new Map(map.set(key, { value, color })));
   }
 
   function getPieceFromCoords(
-    coords: [string, number]
-  ): { value: string; color: string } | undefined {
+    coords: [string, number],
+  ): PieceT | undefined {
     return pieceMap.get(coords[0] + coords[1]);
   }
 
   return (
-    <DndProvider backend={TouchBackend} options={{ enableMouseEvents: true }}>
+    <>
       <div className="board">
         {[...Array(8)]
           .map((_, i) => 8 - i)
@@ -45,10 +70,10 @@ export default function Board() {
                   dark={(i + j) % 2 === 1}
                   piece={getPieceFromCoords([y, x])}
                 />
-              ))
+              )),
           )}
       </div>
       <DragLayer></DragLayer>
-    </DndProvider>
+    </>
   );
 }

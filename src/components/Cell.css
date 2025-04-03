@@ -1,20 +1,20 @@
 .cell {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 6rem;
-    height: 6rem;
-    color: #000;
-    font-size: 75px;
-    font-family: Pecita, sans-serif;
-    line-height: 6rem;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 6rem;
+  height: 6rem;
+  color: #000;
+  font-size: 75px;
+  font-family: Pecita, sans-serif;
+  line-height: 6rem;
 }
 
 .dark-cell {
-    background-color: 	#bc6c25;
+  background-color: #bc6c25;
 }
 
 .light-cell {
-    background-color: #fefae0;
+  background-color: #fefae0;
 }

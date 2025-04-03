@@ -15,7 +15,7 @@ const layerStyles: CSSProperties = {
 
 function getItemStyles(
   initialOffset: XYCoord | null,
-  currentOffset: XYCoord | null
+  currentOffset: XYCoord | null,
 ) {
   if (!initialOffset || !currentOffset) {
     return {
@@ -23,7 +23,7 @@ function getItemStyles(
     };
   }
 
-  let { x, y } = currentOffset;
+  const { x, y } = currentOffset;
 
   const transform = `translate(${x}px, ${y}px)`;
   return {
