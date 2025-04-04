@@ -26,6 +26,8 @@ export class MovesController {
   convertCases: Map<string, number>;
   revertCases: Map<number, string>;
 
+  enPassant = -1;
+
   constructor(
     cases: Map<string, PieceT>,
     convertCases: Map<string, number>,
@@ -47,10 +49,11 @@ export class MovesController {
     let availablesCases: [number, number, string][] = [];
 
     switch (pieceValue) {
-      /*case "p": {
-        return this.pos2_pawn(initCase, pieceColor, cases, sim);
+      case "p": {
+        availablesCases = this.pos2_pawn(numPieceCase, pieceColor);
+        break;
       }
-      case "r": {
+      /*case "r": {
         return this.pos2_rook(initCase, pieceColor, cases, sim);
       }*/
       case "n": {
@@ -215,17 +218,12 @@ export class MovesController {
     return availableMoves;
   }*/
 
-  /* pos2_pawn(
-    pos1: number,
-    color: ChessColor,
-    cases: Map<string, PieceT>,
-    sim?: boolean
-  ) {
-    var availableMoves: [number, number, string][] = [];
+  pos2_pawn(pos1: number, color: ChessColor, sim?: boolean) {
+    const availableMoves: [number, number, string][] = [];
     if (color === "w") {
-      var n = tab120[tab64[pos1] - 10];
+      const n = tab120[tab64[pos1] - 10];
       if (n != -1) {
-        if (this.isEmpty(n, cases)) {
+        if (this.isEmpty(n)) {
           if (sim || this.simulatePosition(pos1, n)) {
             if (n < 8) {
               availableMoves.push([pos1, n, "prom"]);
@@ -237,16 +235,16 @@ export class MovesController {
       }
       if (pos1 <= 55 && pos1 >= 48) {
         // first row
-        if (this.isEmpty(pos1 - 8, cases) && this.isEmpty(pos1 - 16, cases)) {
+        if (this.isEmpty(pos1 - 8) && this.isEmpty(pos1 - 16)) {
           if (sim || this.simulatePosition(pos1, pos1 - 16)) {
             availableMoves.push([pos1, pos1 - 16, "2pawn"]);
           }
         }
       }
     } else if (color === "b") {
-      var n = tab120[tab64[pos1] + 10];
+      const n = tab120[tab64[pos1] + 10];
       if (n != -1) {
-        if (this.isEmpty(n, cases)) {
+        if (this.isEmpty(n)) {
           if (sim || this.simulatePosition(pos1, n)) {
             if (n > 55) {
               availableMoves.push([pos1, n, "prom"]);
@@ -258,15 +256,15 @@ export class MovesController {
       }
       if (pos1 <= 15 && pos1 >= 8) {
         // first row
-        if (this.isEmpty(pos1 + 8, cases) && this.isEmpty(pos1 + 16, cases)) {
+        if (this.isEmpty(pos1 + 8) && this.isEmpty(pos1 + 16)) {
           if (sim || this.simulatePosition(pos1, pos1 + 16)) {
             availableMoves.push([pos1, pos1 + 16, "2pawn"]);
           }
         }
       }
     }
-    return availableMoves.concat(this.capture_pawn(pos1, color, cases));
-  }*/
+    return availableMoves.concat(this.capture_pawn(pos1, color, sim));
+  }
 
   isEmpty(numb: number) {
     return this.getPiece(numb) === null;
@@ -333,10 +331,10 @@ export class MovesController {
       if (piece && piece.color != color && newCoords !== null) {
         pCases = [];
         switch (piece.type) {
-          /*case "pawn": {
-            pCases = shadowController.capture_pawn(i, piece.color, pieceCases, sim);
+          case "pawn": {
+            pCases = shadowController.capture_pawn(newCoords, piece.color, sim);
             break;
-          }
+          } /*
           case "rook": {
             pCases = shadowController.pos2_rook(i, piece.color, pieceCases, sim);
             break;
@@ -371,19 +369,13 @@ export class MovesController {
     return threatsResults;
   }
 
-  /*
-  capture_pawn(
-    pos1: number,
-    color: "white" | "black",
-    cases: Map<string, PieceT>,
-    sim?: boolean
-  ) {
-    var availableMoves: [number, number, string][] = [];
-    if (color === "white") {
+  capture_pawn(pos1: number, color: ChessColor, sim?: boolean) {
+    const availableMoves: [number, number, string][] = [];
+    if (color === "w") {
       //Capture upper left
-      var n = tab120[tab64[pos1] - 11];
+      let n = tab120[tab64[pos1] - 11];
       if (n != -1) {
-        if (this.hasEnemyPiece(n, color, cases)) {
+        if (this.hasEnemyPiece(n, color)) {
           if (sim || this.simulatePosition(pos1, n)) {
             if (n < 8) {
               availableMoves.push([pos1, n, "prom"]);
@@ -391,16 +383,16 @@ export class MovesController {
               availableMoves.push([pos1, n, ""]);
             }
           }
-        } else if (n == enPassant) {
+        } else if (n == this.enPassant) {
           if (sim || this.simulatePosition(pos1, n)) {
             availableMoves.push([pos1, n, "ep"]);
           }
         }
       }
       //Capture upper right
-      var n = tab120[tab64[pos1] - 9];
+      n = tab120[tab64[pos1] - 9];
       if (n != -1) {
-        if (this.hasEnemyPiece(n, color, cases)) {
+        if (this.hasEnemyPiece(n, color)) {
           if (sim || this.simulatePosition(pos1, n)) {
             if (n < 8) {
               availableMoves.push([pos1, n, "prom"]);
@@ -408,17 +400,17 @@ export class MovesController {
               availableMoves.push([pos1, n, ""]);
             }
           }
-        } else if (n == enPassant) {
+        } else if (n == this.enPassant) {
           if (sim || this.simulatePosition(pos1, n)) {
             availableMoves.push([pos1, n, "ep"]);
           }
         }
       }
-    } else if (color === "black") {
+    } else if (color === "b") {
       //Capture bottom left
-      var n = tab120[tab64[pos1] + 11];
+      let n = tab120[tab64[pos1] + 11];
       if (n != -1) {
-        if (this.hasEnemyPiece(n, color, cases)) {
+        if (this.hasEnemyPiece(n, color)) {
           if (sim || this.simulatePosition(pos1, n)) {
             if (n > 55) {
               availableMoves.push([pos1, n, "prom"]);
@@ -426,16 +418,16 @@ export class MovesController {
               availableMoves.push([pos1, n, ""]);
             }
           }
-        } else if (n == enPassant) {
+        } else if (n == this.enPassant) {
           if (sim || this.simulatePosition(pos1, n)) {
             availableMoves.push([pos1, n, "ep"]);
           }
         }
       }
       //Capture bottom right
-      var n = tab120[tab64[pos1] + 9];
+      n = tab120[tab64[pos1] + 9];
       if (n != -1) {
-        if (this.hasEnemyPiece(n, color, cases)) {
+        if (this.hasEnemyPiece(n, color)) {
           if (sim || this.simulatePosition(pos1, n)) {
             if (n > 55) {
               availableMoves.push([pos1, n, "prom"]);
@@ -443,7 +435,7 @@ export class MovesController {
               availableMoves.push([pos1, n, ""]);
             }
           }
-        } else if (n == enPassant) {
+        } else if (n == this.enPassant) {
           if (sim || this.simulatePosition(pos1, n)) {
             availableMoves.push([pos1, n, "ep"]);
           }
@@ -451,7 +443,7 @@ export class MovesController {
       }
     }
     return availableMoves;
-  }*/
+  }
 
   isChecked(
     color: ChessColor,
