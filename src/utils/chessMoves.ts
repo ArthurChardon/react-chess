@@ -182,7 +182,7 @@ export class MovesController {
       this.isEmpty(62)
     ) {
       let pathThreatened = false;
-      for (const threathenedCase of whiteAttackedCases) {
+      for (const threathenedCase of this.whiteAttackedCases) {
         if (threathenedCase == 61 || threathenedCase == 62) {
           pathThreatened = true;
           break;
@@ -199,7 +199,7 @@ export class MovesController {
       this.isEmpty(6)
     ) {
       let pathThreatened = false;
-      for (const threathenedCase of blackAttackedCases) {
+      for (const threathenedCase of this.blackAttackedCases) {
         if (threathenedCase == 5 || threathenedCase == 6) {
           pathThreatened = true;
           break;
@@ -218,7 +218,7 @@ export class MovesController {
       this.isEmpty(59)
     ) {
       let pathThreatened = false;
-      for (const threathenedCase of whiteAttackedCases) {
+      for (const threathenedCase of this.whiteAttackedCases) {
         if (
           threathenedCase == 57 ||
           threathenedCase == 58 ||
@@ -240,7 +240,7 @@ export class MovesController {
       this.isEmpty(3)
     ) {
       let pathThreatened = false;
-      for (const threathenedCase of blackAttackedCases) {
+      for (const threathenedCase of this.blackAttackedCases) {
         if (
           threathenedCase == 1 ||
           threathenedCase == 2 ||
