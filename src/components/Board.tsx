@@ -5,11 +5,12 @@ import { initialBoard } from "../utils/initialBoard";
 import Cell from "./Cell";
 import "./Board.css";
 import DragLayer from "./DragLayer";
-import { PieceT } from "../types/pieces";
+import { ChessColor, PieceT } from "../types/pieces";
 import { MovesController } from "../utils/chessMoves";
 
 let draggingPositionComputed = false;
-let legitimateMoves: string[] = [];
+let legitimateMoves: [string, string, string][] = [];
+let selectableCells: string[] = [];
 
 export default function Board({ convertCases, revertCases }: { convertCases: Map<string, number>, revertCases: Map<number, string> }) {
   const [pieceMap, setPieceMap] = useState(
@@ -38,19 +39,15 @@ export default function Board({ convertCases, revertCases }: { convertCases: Map
     const pieceValue = piece.type;
     const controller = new MovesController(pieceMap, convertCases, revertCases);
     draggingPositionComputed = true;
-    const movesResults = controller.availableMovesFrom(pieceValue, pieceColor, pieceCoords);
-    console.log(movesResults)
-    legitimateMoves = movesResults.map((results) => results[1]);
-
+    legitimateMoves = controller.availableMovesFrom(pieceValue, pieceColor, pieceCoords);
+    console.log(legitimateMoves)
+    selectableCells = legitimateMoves.map((results) => results[1]);
   }
 
   if (!isDragging) {
     draggingPositionComputed = false;
     legitimateMoves = [];
-  }
-
-  function updateMap(key: string, value: string, color: string) {
-    setPieceMap((map) => new Map(map.set(key, { value, color })));
+    selectableCells = [];
   }
 
   function getPieceFromCoords(
@@ -61,6 +58,23 @@ export default function Board({ convertCases, revertCases }: { convertCases: Map
 
   function areCoordsLegitMove(coords: [string, number], legitMoves: string[]) {
     return legitMoves.includes(coords[0] + coords[1]);
+  }
+
+  function requestingMove(coords: [string, number]) {
+    if (areCoordsLegitMove(coords, selectableCells)) {
+      legitimateMoves.forEach((move) => {
+        if (move[1] === coords[0] + coords[1]) {
+          const piece = getPieceFromCoords(move[0].split("") as [string, number]);
+          if (piece) {
+            const mapToUpdate = new Map(pieceMap);
+            mapToUpdate.set(move[1], { type: piece.type, color: piece.color });
+            mapToUpdate.delete(move[0]);
+            setPieceMap(() => new Map(mapToUpdate));
+          }
+        }
+      });
+    }
+    console.log("Requesting move for piece: ", coords);
   }
 
   return (
@@ -77,7 +91,10 @@ export default function Board({ convertCases, revertCases }: { convertCases: Map
                   coords={[y, x]}
                   dark={(i + j) % 2 === 1}
                   piece={getPieceFromCoords([y, x])}
-                  legitMove={areCoordsLegitMove([y, x], legitimateMoves)}
+                  legitMove={areCoordsLegitMove([y, x], selectableCells)}
+                  requestMove={(coords: [string, number]) => {
+                    requestingMove(coords);
+                  }}
                 />
               )),
           )}

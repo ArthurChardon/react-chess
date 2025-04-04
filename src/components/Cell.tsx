@@ -9,16 +9,18 @@ export default function Cell({
   dark,
   piece,
   legitMove,
+  requestMove,
 }: {
-  coords?: [string, number];
+  coords: [string, number];
   dark?: boolean;
   piece?: PieceT;
   legitMove: boolean;
+  requestMove: (coords: [string, number]) => void;
 }) {
   const [{ isOver }, dropRef] = useDrop(
     () => ({
       accept: "piece",
-      drop: () => movePiece(coords),
+      drop: () => requestingMoveToSelf(coords),
       collect: (monitor) => ({
         isOver: !!monitor.isOver(),
       }),
@@ -26,9 +28,8 @@ export default function Cell({
     [coords]
   );
 
-  function movePiece(newCoords: [string, number] | undefined) {
-    console.log("Move piece to: ", newCoords);
-
+  function requestingMoveToSelf(newCoords: [string, number]) {
+    requestMove(newCoords);
   }
 
   return (
