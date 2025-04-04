@@ -53,9 +53,10 @@ export class MovesController {
         availablesCases = this.pos2_pawn(numPieceCase, pieceColor);
         break;
       }
-      /*case "r": {
-        return this.pos2_rook(initCase, pieceColor, cases, sim);
-      }*/
+      case "r": {
+        availablesCases = this.pos2_rook(numPieceCase, pieceColor);
+        break;
+      }
       case "n": {
         availablesCases = this.pos2_knight(numPieceCase, pieceColor);
         break;
@@ -63,12 +64,13 @@ export class MovesController {
       case "b": {
         availablesCases = this.pos2_bishop(numPieceCase, pieceColor);
         break;
-      } /*
-      case "q": {
-        return this.pos2_rook(initCase, pieceColor, cases, sim).concat(
-          this.pos2_bishop(initCase, pieceColor, cases, sim)
-        );
       }
+      case "q": {
+        availablesCases = this.pos2_rook(numPieceCase, pieceColor).concat(
+          this.pos2_bishop(numPieceCase, pieceColor)
+        );
+        break;
+      } /*
       case "k": {
         return this.pos2_king(initCase, pieceColor, false, cases); // à changer le booléen asap
       }*/
@@ -188,20 +190,15 @@ export class MovesController {
       return availableMoves;
     }*/
 
-  /*pos2_rook(
-    pos1: number,
-    color: ChessColor,
-    cases: Map<string, PieceT>,
-    sim?: boolean
-  ) {
-    var availableMoves: [number, number, string][] = [];
-    for (var k of moves_rook) {
-      var j = 1;
+  pos2_rook(pos1: number, color: ChessColor, sim?: boolean) {
+    const availableMoves: [number, number, string][] = [];
+    for (const k of moves_rook) {
+      let j = 1;
       while (true) {
-        var n = tab120[tab64[pos1] + k * j];
+        const n = tab120[tab64[pos1] + k * j];
         if (n != -1) {
           //as we are not out of the board
-          if (this.isEmpty(n, cases) || this.hasEnemyPiece(n, color, cases)) {
+          if (this.isEmpty(n) || this.hasEnemyPiece(n, color)) {
             if (sim || this.simulatePosition(pos1, n)) {
               availableMoves.push([pos1, n, ""]);
             }
@@ -210,14 +207,14 @@ export class MovesController {
           // outside the board
           break;
         }
-        if (!isEmpty(n, cases)) {
+        if (!this.isEmpty(n)) {
           break;
         }
         j = j + 1;
       }
     }
     return availableMoves;
-  }*/
+  }
 
   pos2_pawn(pos1: number, color: ChessColor, sim?: boolean) {
     const availableMoves: [number, number, string][] = [];
@@ -335,11 +332,11 @@ export class MovesController {
           case "p": {
             pCases = shadowController.capture_pawn(newCoords, piece.color, sim);
             break;
-          } /*
+          }
           case "r": {
-            pCases = shadowController.pos2_rook(i, piece.color, pieceCases, sim);
+            pCases = shadowController.pos2_rook(newCoords, piece.color, sim);
             break;
-          }*/
+          }
           case "n": {
             pCases = shadowController.pos2_knight(newCoords, piece.color, sim);
             break;
@@ -347,19 +344,20 @@ export class MovesController {
           case "b": {
             pCases = shadowController.pos2_bishop(newCoords, piece.color, sim);
             break;
-          } /*
-          case "q": {
-            pCases = shadowController.pos2_rook(i, piece.color, pieceCases, sim).concat(
-                shadowController.pos2_bishop(i, piece.color, pieceCases, sim)
-            );
-            break;
           }
+          case "q": {
+            pCases = shadowController
+              .pos2_rook(newCoords, piece.color, sim)
+              .concat(
+                shadowController.pos2_bishop(newCoords, piece.color, sim)
+              );
+            break;
+          } /*
           case "k": {
             pCases = shadowController.pos2_king(i, piece.color, false, pieceCases, sim); // à changer le booléen asap
             break;
           }*/
         }
-        console.log("pCases", pCases, piece.type, coords);
         for (const list of pCases) {
           casesOut.push(list[1]);
         }
@@ -367,7 +365,6 @@ export class MovesController {
     });
     const check = this.isChecked(color, pieceCases, casesOut);
     const threatsResults: [number[], boolean] = [casesOut, check];
-    console.log(threatsResults);
 
     return threatsResults;
   }
