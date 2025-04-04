@@ -60,9 +60,10 @@ export class MovesController {
         availablesCases = this.pos2_knight(numPieceCase, pieceColor);
         break;
       }
-      /*   case "b": {
-        return this.pos2_bishop(initCase, pieceColor, cases, sim);
-      }
+      case "b": {
+        availablesCases = this.pos2_bishop(numPieceCase, pieceColor);
+        break;
+      } /*
       case "q": {
         return this.pos2_rook(initCase, pieceColor, cases, sim).concat(
           this.pos2_bishop(initCase, pieceColor, cases, sim)
@@ -331,33 +332,34 @@ export class MovesController {
       if (piece && piece.color != color && newCoords !== null) {
         pCases = [];
         switch (piece.type) {
-          case "pawn": {
+          case "p": {
             pCases = shadowController.capture_pawn(newCoords, piece.color, sim);
             break;
           } /*
-          case "rook": {
+          case "r": {
             pCases = shadowController.pos2_rook(i, piece.color, pieceCases, sim);
             break;
           }*/
-          case "knight": {
+          case "n": {
             pCases = shadowController.pos2_knight(newCoords, piece.color, sim);
             break;
-          } /*
-          case "bishop": {
-            pCases = shadowController.pos2_bishop(i, piece.color, pieceCases, sim);
-            break;
           }
-          case "queen": {
+          case "b": {
+            pCases = shadowController.pos2_bishop(newCoords, piece.color, sim);
+            break;
+          } /*
+          case "q": {
             pCases = shadowController.pos2_rook(i, piece.color, pieceCases, sim).concat(
                 shadowController.pos2_bishop(i, piece.color, pieceCases, sim)
             );
             break;
           }
-          case "king": {
+          case "k": {
             pCases = shadowController.pos2_king(i, piece.color, false, pieceCases, sim); // à changer le booléen asap
             break;
           }*/
         }
+        console.log("pCases", pCases, piece.type, coords);
         for (const list of pCases) {
           casesOut.push(list[1]);
         }
@@ -365,6 +367,7 @@ export class MovesController {
     });
     const check = this.isChecked(color, pieceCases, casesOut);
     const threatsResults: [number[], boolean] = [casesOut, check];
+    console.log(threatsResults);
 
     return threatsResults;
   }

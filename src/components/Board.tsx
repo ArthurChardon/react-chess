@@ -5,7 +5,7 @@ import { initialBoard } from "../utils/initialBoard";
 import Cell from "./Cell";
 import "./Board.css";
 import DragLayer from "./DragLayer";
-import { ChessColor, PieceT } from "../types/pieces";
+import { PieceT } from "../types/pieces";
 import { MovesController } from "../utils/chessMoves";
 
 let draggingPositionComputed = false;
@@ -22,12 +22,10 @@ export default function Board({ convertCases, revertCases }: { convertCases: Map
     ),
   );
 
-  const { itemType, isDragging, item, initialOffset, currentOffset } =
+  const { isDragging, item } =
     useDragLayer((monitor) => ({
       item: monitor.getItem(),
       itemType: monitor.getItemType(),
-      initialOffset: monitor.getInitialSourceClientOffset(),
-      currentOffset: monitor.getSourceClientOffset(),
       isDragging: monitor.isDragging(),
     }));
 
@@ -40,7 +38,7 @@ export default function Board({ convertCases, revertCases }: { convertCases: Map
     const controller = new MovesController(pieceMap, convertCases, revertCases);
     draggingPositionComputed = true;
     legitimateMoves = controller.availableMovesFrom(pieceValue, pieceColor, pieceCoords);
-    console.log(legitimateMoves)
+    //console.log(legitimateMoves)
     selectableCells = legitimateMoves.map((results) => results[1]);
   }
 
@@ -74,7 +72,6 @@ export default function Board({ convertCases, revertCases }: { convertCases: Map
         }
       });
     }
-    console.log("Requesting move for piece: ", coords);
   }
 
   return (
