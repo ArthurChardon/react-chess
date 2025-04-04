@@ -1,8 +1,8 @@
-import { ChessColor } from "../types/pieces";
+import { ChessColor, ChessPieceType } from "../types/pieces";
 
 export const initialBoard: {
   coords: string;
-  type: string;
+  type: ChessPieceType;
   color: ChessColor;
 }[] = [
   { coords: "a1", type: "r", color: "w" },
@@ -38,6 +38,6 @@ export const initialBoard: {
     }))
   ) as {
   coords: string;
-  type: string;
+  type: ChessPieceType;
   color: ChessColor;
 }[];

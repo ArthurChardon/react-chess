@@ -1,7 +1,7 @@
 export interface PieceT {
   color: ChessColor;
-  type: ChessPiece;
+  type: ChessPieceType;
 }
 
 export type ChessColor = "w" | "b";
-export type ChessPiece = string; //TODO enumerate string literal
+export type ChessPieceType = "p" | "r" | "n" | "b" | "q" | "k";

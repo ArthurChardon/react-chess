@@ -1,4 +1,4 @@
-import { ChessColor, PieceT } from "../types/pieces";
+import { ChessColor, ChessPieceType, PieceT } from "../types/pieces";
 
 const tab120 = [
   -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -15,9 +15,9 @@ const tab64 = [
   67, 68, 71, 72, 73, 74, 75, 76, 77, 78, 81, 82, 83, 84, 85, 86, 87, 88, 91,
   92, 93, 94, 95, 96, 97, 98,
 ];
-const moves_rook = [-10, 10, -1, 1];
-const moves_bishop = [-11, -9, 11, 9];
-const moves_knight = [-12, -21, -19, -8, 12, 21, 19, 8];
+const movesRook = [-10, 10, -1, 1];
+const movesBishop = [-11, -9, 11, 9];
+const movesKnight = [-12, -21, -19, -8, 12, 21, 19, 8];
 export const lts = ["a", "b", "c", "d", "e", "f", "g", "h"];
 export const nbs = [...Array(8).keys()].map((i) => i + 1).reverse();
 
@@ -25,14 +25,14 @@ export class MovesController {
   cases: Map<string, PieceT>;
   convertCases: Map<string, number>;
   revertCases: Map<number, string>;
-  whiteCheck = false;
-  blackCheck = false;
-  whiteCanOOO = true;
-  whiteCanOO = true;
-  blackCanOOO = true;
-  blackCanOO = true;
+  whiteCheck? = false;
+  blackCheck? = false;
+  whiteCanOOO? = true;
+  whiteCanOO? = true;
+  blackCanOOO? = true;
+  blackCanOO? = true;
 
-  enPassant = -1;
+  enPassant? = -1;
 
   whiteAttackedCases: number[] = [];
   blackAttackedCases: number[] = [];
@@ -42,16 +42,28 @@ export class MovesController {
     convertCases: Map<string, number>,
     revertCases: Map<number, string>,
     computeAttackedCases: boolean,
-    whiteCheck: boolean,
-    blackCheck: boolean,
-    whiteCanOOO: boolean,
-    whiteCanOO: boolean,
-    blackCanOOO: boolean,
-    blackCanOO: boolean
+    {
+      whiteCheck,
+      blackCheck,
+      whiteCanOOO,
+      whiteCanOO,
+      blackCanOOO,
+      blackCanOO,
+      enPassant,
+    }: {
+      whiteCheck?: boolean;
+      blackCheck?: boolean;
+      whiteCanOOO?: boolean;
+      whiteCanOO?: boolean;
+      blackCanOOO?: boolean;
+      blackCanOO?: boolean;
+      enPassant?: string;
+    }
   ) {
     this.cases = cases;
     this.convertCases = convertCases;
     this.revertCases = revertCases;
+    this.enPassant = convertCases.get(enPassant ?? "") ?? -1;
     this.whiteCheck = whiteCheck;
     this.blackCheck = blackCheck;
     this.whiteCanOOO = whiteCanOOO;
@@ -66,7 +78,7 @@ export class MovesController {
   }
 
   public availableMovesFrom(
-    pieceValue: string,
+    pieceValue: ChessPieceType,
     pieceColor: ChessColor,
     pieceCoords: string
   ): [string, string, string][] {
@@ -77,29 +89,29 @@ export class MovesController {
 
     switch (pieceValue) {
       case "p": {
-        availablesCases = this.pos2_pawn(numPieceCase, pieceColor);
+        availablesCases = this.moev2Pawn(numPieceCase, pieceColor);
         break;
       }
       case "r": {
-        availablesCases = this.pos2_rook(numPieceCase, pieceColor);
+        availablesCases = this.move2Rook(numPieceCase, pieceColor);
         break;
       }
       case "n": {
-        availablesCases = this.pos2_knight(numPieceCase, pieceColor);
+        availablesCases = this.move2Knight(numPieceCase, pieceColor);
         break;
       }
       case "b": {
-        availablesCases = this.pos2_bishop(numPieceCase, pieceColor);
+        availablesCases = this.move2Bishop(numPieceCase, pieceColor);
         break;
       }
       case "q": {
-        availablesCases = this.pos2_rook(numPieceCase, pieceColor).concat(
-          this.pos2_bishop(numPieceCase, pieceColor)
+        availablesCases = this.move2Rook(numPieceCase, pieceColor).concat(
+          this.move2Bishop(numPieceCase, pieceColor)
         );
         break;
       }
       case "k": {
-        availablesCases = this.pos2_king(numPieceCase, pieceColor, false); // à changer le booléen asap
+        availablesCases = this.move2King(numPieceCase, pieceColor, false); // à changer le booléen asap
         break;
       }
       default: {
@@ -109,16 +121,16 @@ export class MovesController {
     return this.revertNumbsToCoords(availablesCases);
   }
 
-  pos2_bishop(pos1: number, color: ChessColor, sim?: boolean) {
+  move2Bishop(pos1: number, color: ChessColor, sim?: boolean) {
     const availableMoves: [number, number, string][] = [];
-    for (const k of moves_bishop) {
+    for (const k of movesBishop) {
       let j = 1;
       while (true) {
         const n = tab120[tab64[pos1] + k * j];
         if (n != -1) {
           //as we are not out of the board
           if (this.isEmpty(n) || this.hasEnemyPiece(n, color)) {
-            if (sim || this.simulatePosition(pos1, n)) {
+            if (sim || this.isNewPositionValid(pos1, n)) {
               availableMoves.push([pos1, n, ""]);
             }
           }
@@ -135,14 +147,14 @@ export class MovesController {
     return availableMoves;
   }
 
-  pos2_knight(pos1: number, color: ChessColor, sim?: boolean) {
+  move2Knight(pos1: number, color: ChessColor, sim?: boolean) {
     const availableMoves: [number, number, string][] = [];
-    for (const i of moves_knight) {
+    for (const i of movesKnight) {
       const n = tab120[tab64[pos1] + i];
       if (n != -1) {
         //as we are not out of the board
         if (this.isEmpty(n) || this.hasEnemyPiece(n, color)) {
-          if (sim || this.simulatePosition(pos1, n)) {
+          if (sim || this.isNewPositionValid(pos1, n)) {
             availableMoves.push([pos1, n, ""]);
           }
         }
@@ -151,7 +163,7 @@ export class MovesController {
     return availableMoves;
   }
 
-  pos2_king(
+  move2King(
     pos1: number,
     color: ChessColor,
     isAttacked: boolean,
@@ -159,12 +171,12 @@ export class MovesController {
   ) {
     // il faut (pour le pion aussi) gérer les déplacements et les menaces, par exemple sur un roque, le roi peut se déplacer mais pas menacer sur une case
     const availableMoves: [number, number, string][] = [];
-    for (const i of moves_rook.concat(moves_bishop)) {
+    for (const i of movesRook.concat(movesBishop)) {
       const n = tab120[tab64[pos1] + i];
       if (n != -1) {
         //as we are not out of the board
         if (this.isEmpty(n) || this.hasEnemyPiece(n, color)) {
-          if (sim || this.simulatePosition(pos1, n)) {
+          if (sim || this.isNewPositionValid(pos1, n)) {
             availableMoves.push([pos1, n, ""]);
           }
         }
@@ -258,16 +270,16 @@ export class MovesController {
     return availableMoves;
   }
 
-  pos2_rook(pos1: number, color: ChessColor, sim?: boolean) {
+  move2Rook(pos1: number, color: ChessColor, sim?: boolean) {
     const availableMoves: [number, number, string][] = [];
-    for (const k of moves_rook) {
+    for (const k of movesRook) {
       let j = 1;
       while (true) {
         const n = tab120[tab64[pos1] + k * j];
         if (n != -1) {
           //as we are not out of the board
           if (this.isEmpty(n) || this.hasEnemyPiece(n, color)) {
-            if (sim || this.simulatePosition(pos1, n)) {
+            if (sim || this.isNewPositionValid(pos1, n)) {
               availableMoves.push([pos1, n, ""]);
             }
           }
@@ -284,13 +296,13 @@ export class MovesController {
     return availableMoves;
   }
 
-  pos2_pawn(pos1: number, color: ChessColor, sim?: boolean) {
+  moev2Pawn(pos1: number, color: ChessColor, sim?: boolean) {
     const availableMoves: [number, number, string][] = [];
     if (color === "w") {
       const n = tab120[tab64[pos1] - 10];
       if (n != -1) {
         if (this.isEmpty(n)) {
-          if (sim || this.simulatePosition(pos1, n)) {
+          if (sim || this.isNewPositionValid(pos1, n)) {
             if (n < 8) {
               availableMoves.push([pos1, n, "prom"]);
             } else {
@@ -302,7 +314,7 @@ export class MovesController {
       if (pos1 <= 55 && pos1 >= 48) {
         // first row
         if (this.isEmpty(pos1 - 8) && this.isEmpty(pos1 - 16)) {
-          if (sim || this.simulatePosition(pos1, pos1 - 16)) {
+          if (sim || this.isNewPositionValid(pos1, pos1 - 16)) {
             availableMoves.push([pos1, pos1 - 16, "2pawn"]);
           }
         }
@@ -311,7 +323,7 @@ export class MovesController {
       const n = tab120[tab64[pos1] + 10];
       if (n != -1) {
         if (this.isEmpty(n)) {
-          if (sim || this.simulatePosition(pos1, n)) {
+          if (sim || this.isNewPositionValid(pos1, n)) {
             if (n > 55) {
               availableMoves.push([pos1, n, "prom"]);
             } else {
@@ -323,7 +335,7 @@ export class MovesController {
       if (pos1 <= 15 && pos1 >= 8) {
         // first row
         if (this.isEmpty(pos1 + 8) && this.isEmpty(pos1 + 16)) {
-          if (sim || this.simulatePosition(pos1, pos1 + 16)) {
+          if (sim || this.isNewPositionValid(pos1, pos1 + 16)) {
             availableMoves.push([pos1, pos1 + 16, "2pawn"]);
           }
         }
@@ -349,8 +361,7 @@ export class MovesController {
     return false;
   }
 
-  simulatePosition(pos1: number, pos2: number) {
-    //SHOULD BE NAMED: newPositionValid(pos1, pos2)
+  isNewPositionValid(pos1: number, pos2: number) {
     const piece1 = this.getPiece(pos1);
     if (piece1) {
       const color = piece1.color;
@@ -388,12 +399,7 @@ export class MovesController {
       this.convertCases,
       this.revertCases,
       false,
-      this.whiteCheck,
-      this.blackCheck,
-      this.whiteCanOOO,
-      this.whiteCanOO,
-      this.blackCanOOO,
-      this.blackCanOO
+      {}
     );
 
     const casesOut: number[] = [];
@@ -409,27 +415,27 @@ export class MovesController {
             break;
           }
           case "r": {
-            pCases = shadowController.pos2_rook(newCoords, piece.color, sim);
+            pCases = shadowController.move2Rook(newCoords, piece.color, sim);
             break;
           }
           case "n": {
-            pCases = shadowController.pos2_knight(newCoords, piece.color, sim);
+            pCases = shadowController.move2Knight(newCoords, piece.color, sim);
             break;
           }
           case "b": {
-            pCases = shadowController.pos2_bishop(newCoords, piece.color, sim);
+            pCases = shadowController.move2Bishop(newCoords, piece.color, sim);
             break;
           }
           case "q": {
             pCases = shadowController
-              .pos2_rook(newCoords, piece.color, sim)
+              .move2Rook(newCoords, piece.color, sim)
               .concat(
-                shadowController.pos2_bishop(newCoords, piece.color, sim)
+                shadowController.move2Bishop(newCoords, piece.color, sim)
               );
             break;
           }
           case "k": {
-            pCases = shadowController.pos2_king(
+            pCases = shadowController.move2King(
               newCoords,
               piece.color,
               false,
@@ -456,7 +462,7 @@ export class MovesController {
       let n = tab120[tab64[pos1] - 11];
       if (n != -1) {
         if (this.hasEnemyPiece(n, color)) {
-          if (sim || this.simulatePosition(pos1, n)) {
+          if (sim || this.isNewPositionValid(pos1, n)) {
             if (n < 8) {
               availableMoves.push([pos1, n, "prom"]);
             } else {
@@ -464,7 +470,7 @@ export class MovesController {
             }
           }
         } else if (n == this.enPassant) {
-          if (sim || this.simulatePosition(pos1, n)) {
+          if (sim || this.isNewPositionValid(pos1, n)) {
             availableMoves.push([pos1, n, "ep"]);
           }
         }
@@ -473,7 +479,7 @@ export class MovesController {
       n = tab120[tab64[pos1] - 9];
       if (n != -1) {
         if (this.hasEnemyPiece(n, color)) {
-          if (sim || this.simulatePosition(pos1, n)) {
+          if (sim || this.isNewPositionValid(pos1, n)) {
             if (n < 8) {
               availableMoves.push([pos1, n, "prom"]);
             } else {
@@ -481,7 +487,7 @@ export class MovesController {
             }
           }
         } else if (n == this.enPassant) {
-          if (sim || this.simulatePosition(pos1, n)) {
+          if (sim || this.isNewPositionValid(pos1, n)) {
             availableMoves.push([pos1, n, "ep"]);
           }
         }
@@ -491,7 +497,7 @@ export class MovesController {
       let n = tab120[tab64[pos1] + 11];
       if (n != -1) {
         if (this.hasEnemyPiece(n, color)) {
-          if (sim || this.simulatePosition(pos1, n)) {
+          if (sim || this.isNewPositionValid(pos1, n)) {
             if (n > 55) {
               availableMoves.push([pos1, n, "prom"]);
             } else {
@@ -499,7 +505,7 @@ export class MovesController {
             }
           }
         } else if (n == this.enPassant) {
-          if (sim || this.simulatePosition(pos1, n)) {
+          if (sim || this.isNewPositionValid(pos1, n)) {
             availableMoves.push([pos1, n, "ep"]);
           }
         }
@@ -508,7 +514,7 @@ export class MovesController {
       n = tab120[tab64[pos1] + 9];
       if (n != -1) {
         if (this.hasEnemyPiece(n, color)) {
-          if (sim || this.simulatePosition(pos1, n)) {
+          if (sim || this.isNewPositionValid(pos1, n)) {
             if (n > 55) {
               availableMoves.push([pos1, n, "prom"]);
             } else {
@@ -516,7 +522,7 @@ export class MovesController {
             }
           }
         } else if (n == this.enPassant) {
-          if (sim || this.simulatePosition(pos1, n)) {
+          if (sim || this.isNewPositionValid(pos1, n)) {
             availableMoves.push([pos1, n, "ep"]);
           }
         }

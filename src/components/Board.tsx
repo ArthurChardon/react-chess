@@ -17,6 +17,7 @@ let whiteCanOOO = true;
 let whiteCanOO = true;
 let blackCanOOO = true;
 let blackCanOO = true;
+let enPassant = "";
 
 export default function Board({ convertCases, revertCases }: { convertCases: Map<string, number>, revertCases: Map<number, string> }) {
   const [pieceMap, setPieceMap] = useState(
@@ -37,11 +38,11 @@ export default function Board({ convertCases, revertCases }: { convertCases: Map
 
 
   if (isDragging && !draggingPositionComputed) {
-    const piece = item.piece;
+    const piece = item.piece as PieceT;
     const pieceCoords = item.coords.join("");
     const pieceColor = piece.color;
     const pieceValue = piece.type;
-    const controller = new MovesController(pieceMap, convertCases, revertCases, true, whiteCheck, blackCheck, whiteCanOOO, whiteCanOO, blackCanOOO, blackCanOO);
+    const controller = new MovesController(pieceMap, convertCases, revertCases, true, { whiteCheck, blackCheck, whiteCanOOO, whiteCanOO, blackCanOOO, blackCanOO, enPassant });
     draggingPositionComputed = true;
     legitimateMoves = controller.availableMovesFrom(pieceValue, pieceColor, pieceCoords);
     //console.log(legitimateMoves)
@@ -69,11 +70,66 @@ export default function Board({ convertCases, revertCases }: { convertCases: Map
       legitimateMoves.forEach((move) => {
         if (move[1] === coords[0] + coords[1]) {
           const piece = getPieceFromCoords(move[0].split("") as [string, number]);
+          const mapToUpdate = new Map(pieceMap);
+          enPassant = "";
           if (piece) {
-            const mapToUpdate = new Map(pieceMap);
-            mapToUpdate.set(move[1], { type: piece.type, color: piece.color });
-            mapToUpdate.delete(move[0]);
-            setPieceMap(() => new Map(mapToUpdate));
+            switch (move[2]) {
+              case "": { // Default move
+                mapToUpdate.set(move[1], { type: piece.type, color: piece.color });
+                mapToUpdate.delete(move[0]);
+                setPieceMap(() => new Map(mapToUpdate));
+                break;
+              }
+
+              case 'OO': {
+                const rookCase = piece.color === "w" ? "f1" : "f8";
+                mapToUpdate.set(move[1], { type: piece.type, color: piece.color });
+                mapToUpdate.set(rookCase, { type: "r", color: piece.color });
+                mapToUpdate.delete(move[0]);
+                mapToUpdate.delete(piece.color === "w" ? "h1" : "h8");
+                setPieceMap(() => new Map(mapToUpdate));
+                break;
+              }
+              case 'OOO': {
+                const rookCase = piece.color === "w" ? "d1" : "d8";
+                mapToUpdate.set(move[1], { type: piece.type, color: piece.color });
+                mapToUpdate.set(rookCase, { type: "r", color: piece.color });
+                mapToUpdate.delete(move[0]);
+                mapToUpdate.delete(piece.color === "w" ? "a1" : "a8");
+                setPieceMap(() => new Map(mapToUpdate));
+                break;
+              }
+
+              case 'prom': { // convert a pawn
+                //TODO
+                /*this._promotePawn.next(pos1);
+                this.nbPromote = pos2;
+                this.nbPromoteFrom = pos1;
+                this.promotionWait = true;
+                this.choiceSubscription = this._promoteChoice.subscribe((type) => {
+                  this.promoteTo(type);
+                })      */
+                break;
+              }
+
+              case '2pawn': {
+                mapToUpdate.set(move[1], { type: piece.type, color: piece.color });
+                mapToUpdate.delete(move[0]);
+                enPassant = move[1][0] + ((Number(move[0][1]) + Number(move[1][1])) / 2);
+                setPieceMap(() => new Map(mapToUpdate));
+                break;
+              }
+
+              case 'ep': {
+                console.log("en passant", move);
+                mapToUpdate.set(move[1], { type: piece.type, color: piece.color });
+                mapToUpdate.delete(move[0]);
+                const posPawn2 = piece.color === 'w' ? -1 : 1;
+                mapToUpdate.delete(move[1][0] + (Number(move[1][1]) + posPawn2));
+                setPieceMap(() => new Map(mapToUpdate));
+                break;
+              }
+            }
           }
         }
       });
