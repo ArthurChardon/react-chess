@@ -5,8 +5,9 @@ import { initialBoard } from "../utils/initialBoard";
 import Cell from "./Cell";
 import "./Board.css";
 import DragLayer from "./DragLayer";
-import { PieceT } from "../types/pieces";
+import { ChessColor, PieceT } from "../types/pieces";
 import { MovesController } from "../utils/chessMoves";
+import Piece from "./Piece";
 
 let draggingPositionComputed = false;
 let legitimateMoves: [string, string, string][] = [];
@@ -28,6 +29,8 @@ export default function Board({ convertCases, revertCases }: { convertCases: Map
       ]),
     ),
   );
+
+  const [promotionPick, setPromotionPick] = useState<{ coords: string, color: ChessColor } | null>(null);
 
   const { isDragging, item } =
     useDragLayer((monitor) => ({
@@ -100,15 +103,8 @@ export default function Board({ convertCases, revertCases }: { convertCases: Map
                 break;
               }
 
-              case 'prom': { // convert a pawn
-                //TODO
-                /*this._promotePawn.next(pos1);
-                this.nbPromote = pos2;
-                this.nbPromoteFrom = pos1;
-                this.promotionWait = true;
-                this.choiceSubscription = this._promoteChoice.subscribe((type) => {
-                  this.promoteTo(type);
-                })      */
+              case 'prom': { // promote a pawn
+                setPromotionPick({ color: piece.color, coords: move[1] });
                 break;
               }
 
@@ -121,7 +117,6 @@ export default function Board({ convertCases, revertCases }: { convertCases: Map
               }
 
               case 'ep': {
-                console.log("en passant", move);
                 mapToUpdate.set(move[1], { type: piece.type, color: piece.color });
                 mapToUpdate.delete(move[0]);
                 const posPawn2 = piece.color === 'w' ? -1 : 1;
@@ -139,6 +134,14 @@ export default function Board({ convertCases, revertCases }: { convertCases: Map
   return (
     <>
       <div className="board">
+        {promotionPick && (
+          <div className="promotionPick">
+            <Piece piece={{ type: "q", color: promotionPick.color }}></Piece>
+            <Piece piece={{ type: "r", color: promotionPick.color }}></Piece>
+            <Piece piece={{ type: "b", color: promotionPick.color }}></Piece>
+            <Piece piece={{ type: "n", color: promotionPick.color }}></Piece>
+          </div>)
+        }
         {[...Array(8)]
           .map((_, i) => 8 - i)
           .map((x, i) =>

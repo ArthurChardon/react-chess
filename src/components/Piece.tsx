@@ -15,9 +15,11 @@ function getStyles(isDragging: boolean): CSSProperties {
 export default function Piece({
   piece,
   coords,
+  draggable = false,
 }: {
   piece?: PieceT;
   coords?: [string, number];
+  draggable?: boolean;
 }) {
   const [{ isDragging }, dragRef, preview] = useDrag(() => ({
     type: "piece",
@@ -41,7 +43,7 @@ export default function Piece({
 
   return (
     <>
-      <div ref={dragRef} style={getStyles(isDragging)}>
+      <div ref={draggable ? dragRef : null} style={getStyles(isDragging)}>
         <img
           className={"piece-cell " + (isDragging ? "dragged" : "")}
           src={srcImage}

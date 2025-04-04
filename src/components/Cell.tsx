@@ -42,7 +42,7 @@ export default function Cell({
       >
         {coords}
       </div>
-      {piece && <Piece piece={piece} coords={coords}></Piece>}
+      {piece && <Piece piece={piece} coords={coords} draggable={true}></Piece>}
       {isOver && legitMove && (
         <div
           style={{
