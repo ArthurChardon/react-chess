@@ -11,6 +11,12 @@ import { MovesController } from "../utils/chessMoves";
 let draggingPositionComputed = false;
 let legitimateMoves: [string, string, string][] = [];
 let selectableCells: string[] = [];
+let whiteCheck = false;
+let blackCheck = false;
+let whiteCanOOO = true;
+let whiteCanOO = true;
+let blackCanOOO = true;
+let blackCanOO = true;
 
 export default function Board({ convertCases, revertCases }: { convertCases: Map<string, number>, revertCases: Map<number, string> }) {
   const [pieceMap, setPieceMap] = useState(
@@ -35,7 +41,7 @@ export default function Board({ convertCases, revertCases }: { convertCases: Map
     const pieceCoords = item.coords.join("");
     const pieceColor = piece.color;
     const pieceValue = piece.type;
-    const controller = new MovesController(pieceMap, convertCases, revertCases);
+    const controller = new MovesController(pieceMap, convertCases, revertCases, true, whiteCheck, blackCheck, whiteCanOOO, whiteCanOO, blackCanOOO, blackCanOO);
     draggingPositionComputed = true;
     legitimateMoves = controller.availableMovesFrom(pieceValue, pieceColor, pieceCoords);
     //console.log(legitimateMoves)

@@ -25,17 +25,44 @@ export class MovesController {
   cases: Map<string, PieceT>;
   convertCases: Map<string, number>;
   revertCases: Map<number, string>;
+  whiteCheck = false;
+  blackCheck = false;
+  whiteCanOOO = true;
+  whiteCanOO = true;
+  blackCanOOO = true;
+  blackCanOO = true;
 
   enPassant = -1;
+
+  whiteAttackedCases: number[] = [];
+  blackAttackedCases: number[] = [];
 
   constructor(
     cases: Map<string, PieceT>,
     convertCases: Map<string, number>,
-    revertCases: Map<number, string>
+    revertCases: Map<number, string>,
+    computeAttackedCases: boolean,
+    whiteCheck: boolean,
+    blackCheck: boolean,
+    whiteCanOOO: boolean,
+    whiteCanOO: boolean,
+    blackCanOOO: boolean,
+    blackCanOO: boolean
   ) {
     this.cases = cases;
     this.convertCases = convertCases;
     this.revertCases = revertCases;
+    this.whiteCheck = whiteCheck;
+    this.blackCheck = blackCheck;
+    this.whiteCanOOO = whiteCanOOO;
+    this.whiteCanOO = whiteCanOO;
+    this.blackCanOOO = blackCanOOO;
+    this.blackCanOO = blackCanOO;
+
+    if (computeAttackedCases) {
+      this.casesAttacked("w");
+      this.casesAttacked("b");
+    }
   }
 
   public availableMovesFrom(
@@ -70,10 +97,11 @@ export class MovesController {
           this.pos2_bishop(numPieceCase, pieceColor)
         );
         break;
-      } /*
+      }
       case "k": {
-        return this.pos2_king(initCase, pieceColor, false, cases); // à changer le booléen asap
-      }*/
+        availablesCases = this.pos2_king(numPieceCase, pieceColor, false); // à changer le booléen asap
+        break;
+      }
       default: {
         return [];
       }
@@ -123,72 +151,112 @@ export class MovesController {
     return availableMoves;
   }
 
-  /*  pos2_king (pos1: number, color: 'white'|'black', isAttacked: boolean, cases: (Piece|null)[], sim?: boolean) {
-      // il faut (pour le pion aussi) gérer les déplacements et les menaces, par exemple sur un roque, le roi peut se déplacer mais pas menacer sur une case
-      var availableMoves: [number,number,string][] = [];
-      for(var i of moves_rook.concat(moves_bishop)) {
-        var n = tab120[tab64[pos1] + i]
-        if(n != -1) { //as we are not out of the board
-          if(isEmpty(n, cases) || hasEnemyPiece(n, color, cases)) {
-            if(sim || simulatePosition(pos1, n)) {
-              availableMoves.push([pos1, n, '']);
-            }
+  pos2_king(
+    pos1: number,
+    color: ChessColor,
+    isAttacked: boolean,
+    sim?: boolean
+  ) {
+    // il faut (pour le pion aussi) gérer les déplacements et les menaces, par exemple sur un roque, le roi peut se déplacer mais pas menacer sur une case
+    const availableMoves: [number, number, string][] = [];
+    for (const i of moves_rook.concat(moves_bishop)) {
+      const n = tab120[tab64[pos1] + i];
+      if (n != -1) {
+        //as we are not out of the board
+        if (this.isEmpty(n) || this.hasEnemyPiece(n, color)) {
+          if (sim || this.simulatePosition(pos1, n)) {
+            availableMoves.push([pos1, n, ""]);
           }
         }
       }
-      if(isAttacked) {
-        return availableMoves;
-      }
-      // castle moves
-      if(color === 'white' && !whiteCheck && whiteCanOO && isEmpty(61, cases) && isEmpty(62, cases)) {
-        var pathThreatened = false;
-        for (var threathenedCase of whiteAttackedCases) {
-          if (threathenedCase == 61 || threathenedCase == 62) {
-            pathThreatened = true;
-            break;
-          }
-        }
-        if(!pathThreatened) {
-          availableMoves.push([pos1, 62, 'OO'])
-        }
-      } else if(color === 'black' && !blackCheck && blackCanOO && isEmpty(5, cases) && isEmpty(6, cases)) {
-        var pathThreatened = false;
-        for (var threathenedCase of blackAttackedCases) {
-          if (threathenedCase == 5 || threathenedCase == 6) {
-            pathThreatened = true;
-            break;
-          }
-        }
-        if(!pathThreatened) {
-          availableMoves.push([pos1, 6, 'OO'])
-        }
-      }
-      if(color === 'white' && !whiteCheck &&  whiteCanOOO && isEmpty(57, cases) && isEmpty(58, cases) && isEmpty(59, cases)) {
-        var pathThreatened = false;
-        for (var threathenedCase of whiteAttackedCases) {
-          if (threathenedCase == 57 || threathenedCase == 58 || threathenedCase === 59) {
-            pathThreatened = true;
-            break;
-          }
-        }
-        if(!pathThreatened) {
-          availableMoves.push([pos1, 58, 'OOO'])
-        }
-      } else if(color === 'black' && !blackCheck && blackCanOOO && isEmpty(1, cases) && isEmpty(2, cases) && isEmpty(3, cases)) {
-        var pathThreatened = false;
-        for (var threathenedCase of blackAttackedCases) {
-          if (threathenedCase == 1 || threathenedCase == 2 || threathenedCase === 3) {
-            pathThreatened = true;
-            break;
-          }
-        }
-        if(!pathThreatened) {
-          availableMoves.push([pos1, 2, 'OOO'])
-        }
-      }
-  
+    }
+    if (isAttacked) {
       return availableMoves;
-    }*/
+    }
+    // castle moves
+    if (
+      color === "w" &&
+      !this.whiteCheck &&
+      this.whiteCanOO &&
+      this.isEmpty(61) &&
+      this.isEmpty(62)
+    ) {
+      let pathThreatened = false;
+      for (const threathenedCase of whiteAttackedCases) {
+        if (threathenedCase == 61 || threathenedCase == 62) {
+          pathThreatened = true;
+          break;
+        }
+      }
+      if (!pathThreatened) {
+        availableMoves.push([pos1, 62, "OO"]);
+      }
+    } else if (
+      color === "b" &&
+      !this.blackCheck &&
+      this.blackCanOO &&
+      this.isEmpty(5) &&
+      this.isEmpty(6)
+    ) {
+      let pathThreatened = false;
+      for (const threathenedCase of blackAttackedCases) {
+        if (threathenedCase == 5 || threathenedCase == 6) {
+          pathThreatened = true;
+          break;
+        }
+      }
+      if (!pathThreatened) {
+        availableMoves.push([pos1, 6, "OO"]);
+      }
+    }
+    if (
+      color === "w" &&
+      !this.whiteCheck &&
+      this.whiteCanOOO &&
+      this.isEmpty(57) &&
+      this.isEmpty(58) &&
+      this.isEmpty(59)
+    ) {
+      let pathThreatened = false;
+      for (const threathenedCase of whiteAttackedCases) {
+        if (
+          threathenedCase == 57 ||
+          threathenedCase == 58 ||
+          threathenedCase === 59
+        ) {
+          pathThreatened = true;
+          break;
+        }
+      }
+      if (!pathThreatened) {
+        availableMoves.push([pos1, 58, "OOO"]);
+      }
+    } else if (
+      color === "b" &&
+      !this.blackCheck &&
+      this.blackCanOOO &&
+      this.isEmpty(1) &&
+      this.isEmpty(2) &&
+      this.isEmpty(3)
+    ) {
+      let pathThreatened = false;
+      for (const threathenedCase of blackAttackedCases) {
+        if (
+          threathenedCase == 1 ||
+          threathenedCase == 2 ||
+          threathenedCase === 3
+        ) {
+          pathThreatened = true;
+          break;
+        }
+      }
+      if (!pathThreatened) {
+        availableMoves.push([pos1, 2, "OOO"]);
+      }
+    }
+
+    return availableMoves;
+  }
 
   pos2_rook(pos1: number, color: ChessColor, sim?: boolean) {
     const availableMoves: [number, number, string][] = [];
@@ -318,7 +386,14 @@ export class MovesController {
     const shadowController = new MovesController(
       pieceCases,
       this.convertCases,
-      this.revertCases
+      this.revertCases,
+      false,
+      this.whiteCheck,
+      this.blackCheck,
+      this.whiteCanOOO,
+      this.whiteCanOO,
+      this.blackCanOOO,
+      this.blackCanOO
     );
 
     const casesOut: number[] = [];
@@ -352,11 +427,16 @@ export class MovesController {
                 shadowController.pos2_bishop(newCoords, piece.color, sim)
               );
             break;
-          } /*
+          }
           case "k": {
-            pCases = shadowController.pos2_king(i, piece.color, false, pieceCases, sim); // à changer le booléen asap
+            pCases = shadowController.pos2_king(
+              newCoords,
+              piece.color,
+              false,
+              sim
+            ); // à changer le booléen asap
             break;
-          }*/
+          }
         }
         for (const list of pCases) {
           casesOut.push(list[1]);
@@ -443,6 +523,32 @@ export class MovesController {
       }
     }
     return availableMoves;
+  }
+
+  casesAttacked(color: ChessColor) {
+    // Returns the cases of the colored pieces being threatened
+    let cases: number[] = [];
+
+    const threatsResult = this.refreshThreats(color, this.cases);
+    cases = threatsResult[0];
+    const check = threatsResult[1];
+
+    if (check) {
+      if (color === "w") {
+        this.whiteCheck = true;
+      }
+      if (color === "b") {
+        this.blackCheck = true;
+      }
+    } else {
+      if (color === "w") {
+        this.whiteCheck = false;
+      }
+      if (color === "b") {
+        this.blackCheck = false;
+      }
+    }
+    return cases;
   }
 
   isChecked(
