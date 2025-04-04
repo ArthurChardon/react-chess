@@ -24,8 +24,8 @@ export default function Piece({
     item: { piece, coords },
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging(),
-    }),
-  }));
+    })
+  }), [piece]);
 
   useEffect(() => {
     preview(getEmptyImage(), { captureDraggingState: true });
