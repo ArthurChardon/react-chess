@@ -8,10 +8,12 @@ export default function Cell({
   coords,
   dark,
   piece,
+  legitMove,
 }: {
   coords?: [string, number];
   dark?: boolean;
   piece?: PieceT;
+  legitMove: boolean;
 }) {
   const [{ isOver }, dropRef] = useDrop(
     () => ({
@@ -21,13 +23,12 @@ export default function Cell({
         isOver: !!monitor.isOver(),
       }),
     }),
-    [coords],
+    [coords]
   );
-
-  let isValidCell = false;
 
   function movePiece(newCoords: [string, number] | undefined) {
     console.log("Move piece to: ", newCoords);
+
   }
 
   return (
@@ -35,10 +36,13 @@ export default function Cell({
       className={"cell " + (dark ? "dark-cell" : "light-cell")}
       ref={dropRef}
     >
-      <div style={{ position: "absolute", pointerEvents: "none" }}>      {coords}
+      <div
+        style={{ display: "none", position: "absolute", pointerEvents: "none" }}
+      >
+        {coords}
       </div>
       {piece && <Piece piece={piece} coords={coords}></Piece>}
-      {isOver && isValidCell && (
+      {isOver && legitMove && (
         <div
           style={{
             position: "absolute",
@@ -49,6 +53,22 @@ export default function Cell({
             zIndex: 1,
             opacity: 0.5,
             backgroundColor: "yellow",
+          }}
+        />
+      )}
+      {!isOver && legitMove && (
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            height: "25%",
+            width: "25%",
+            zIndex: 1,
+            opacity: 0.35,
+            backgroundColor: "grey",
+            borderRadius: "50%",
           }}
         />
       )}

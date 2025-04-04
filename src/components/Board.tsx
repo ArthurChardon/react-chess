@@ -9,6 +9,7 @@ import { PieceT } from "../types/pieces";
 import { MovesController } from "../utils/chessMoves";
 
 let draggingPositionComputed = false;
+let legitimateMoves: string[] = [];
 
 export default function Board({ convertCases, revertCases }: { convertCases: Map<string, number>, revertCases: Map<number, string> }) {
   const [pieceMap, setPieceMap] = useState(
@@ -29,20 +30,23 @@ export default function Board({ convertCases, revertCases }: { convertCases: Map
       isDragging: monitor.isDragging(),
     }));
 
+
   if (isDragging && !draggingPositionComputed) {
     const piece = item.piece;
     const pieceCoords = item.coords.join("");
     const pieceColor = piece.color;
     const pieceValue = piece.type;
     const controller = new MovesController(pieceMap, convertCases, revertCases);
-    console.log(piece);
     draggingPositionComputed = true;
-    console.log(controller.availableMovesFrom(pieceValue, pieceColor, pieceCoords))
+    const movesResults = controller.availableMovesFrom(pieceValue, pieceColor, pieceCoords);
+    console.log(movesResults)
+    legitimateMoves = movesResults.map((results) => results[1]);
 
   }
 
   if (!isDragging) {
     draggingPositionComputed = false;
+    legitimateMoves = [];
   }
 
   function updateMap(key: string, value: string, color: string) {
@@ -53,6 +57,10 @@ export default function Board({ convertCases, revertCases }: { convertCases: Map
     coords: [string, number],
   ): PieceT | undefined {
     return pieceMap.get(coords[0] + coords[1]);
+  }
+
+  function areCoordsLegitMove(coords: [string, number], legitMoves: string[]) {
+    return legitMoves.includes(coords[0] + coords[1]);
   }
 
   return (
@@ -69,6 +77,7 @@ export default function Board({ convertCases, revertCases }: { convertCases: Map
                   coords={[y, x]}
                   dark={(i + j) % 2 === 1}
                   piece={getPieceFromCoords([y, x])}
+                  legitMove={areCoordsLegitMove([y, x], legitimateMoves)}
                 />
               )),
           )}

@@ -102,11 +102,9 @@ export class MovesController {
   }
 
   pos2_knight(pos1: number, color: ChessColor, sim?: boolean) {
-    console.log("obiiiready", pos1);
     const availableMoves: [number, number, string][] = [];
     for (const i of moves_knight) {
       const n = tab120[tab64[pos1] + i];
-      console.log("obiii", n);
       if (n != -1) {
         //as we are not out of the board
         if (this.isEmpty(n) || this.hasEnemyPiece(n, color)) {
@@ -289,17 +287,26 @@ export class MovesController {
 
   simulatePosition(pos1: number, pos2: number) {
     //SHOULD BE NAMED: newPositionValid(pos1, pos2)
-    return pos1 !== pos2;
-  }
-  /*
-    var piece1 = this.getPiece(pos1);
+    const piece1 = this.getPiece(pos1);
     if (piece1) {
-      var color = piece1.color;
-      var pieceCasesCopy: (Piece | null)[] = Object.assign([], pieceCases);
-      pieceCasesCopy[pos2] = pieceCasesCopy[pos1];
-      pieceCasesCopy[pos1] = null;
+      const color = piece1.color;
+      const casesCopy: Map<string, PieceT> = new Map<string, PieceT>();
 
-      var threatsResult = this.refreshThreats(color, pieceCasesCopy, true);
+      const coords1 = this.revertCases.get(pos1);
+      const coords2 = this.revertCases.get(pos2);
+
+      this.cases.forEach((piece, coords) => {
+        if (piece) {
+          casesCopy.set(coords, piece);
+        }
+      });
+
+      if (!coords1 || !coords2) return false;
+
+      casesCopy.set(coords2, piece1);
+      casesCopy.delete(coords1);
+
+      const threatsResult = this.refreshThreats(color, casesCopy, true);
       if (threatsResult[1]) {
         return false;
       }
@@ -307,7 +314,64 @@ export class MovesController {
     return true;
   }
 
+  refreshThreats(
+    color: ChessColor,
+    pieceCases: Map<string, PieceT>,
+    sim?: boolean
+  ) {
+    const shadowController = new MovesController(
+      pieceCases,
+      this.convertCases,
+      this.revertCases
+    );
 
+    const casesOut: number[] = [];
+    let pCases: [number, number, string][] = [];
+
+    pieceCases.forEach((piece, coords) => {
+      const newCoords = this.convertCases.get(coords) ?? null;
+      if (piece && piece.color != color && newCoords !== null) {
+        pCases = [];
+        switch (piece.type) {
+          /*case "pawn": {
+            pCases = shadowController.capture_pawn(i, piece.color, pieceCases, sim);
+            break;
+          }
+          case "rook": {
+            pCases = shadowController.pos2_rook(i, piece.color, pieceCases, sim);
+            break;
+          }*/
+          case "knight": {
+            pCases = shadowController.pos2_knight(newCoords, piece.color, sim);
+            break;
+          } /*
+          case "bishop": {
+            pCases = shadowController.pos2_bishop(i, piece.color, pieceCases, sim);
+            break;
+          }
+          case "queen": {
+            pCases = shadowController.pos2_rook(i, piece.color, pieceCases, sim).concat(
+                shadowController.pos2_bishop(i, piece.color, pieceCases, sim)
+            );
+            break;
+          }
+          case "king": {
+            pCases = shadowController.pos2_king(i, piece.color, false, pieceCases, sim); // à changer le booléen asap
+            break;
+          }*/
+        }
+        for (const list of pCases) {
+          casesOut.push(list[1]);
+        }
+      }
+    });
+    const check = this.isChecked(color, pieceCases, casesOut);
+    const threatsResults: [number[], boolean] = [casesOut, check];
+
+    return threatsResults;
+  }
+
+  /*
   capture_pawn(
     pos1: number,
     color: "white" | "black",
@@ -388,6 +452,20 @@ export class MovesController {
     }
     return availableMoves;
   }*/
+
+  isChecked(
+    color: ChessColor,
+    pieceCases: Map<string, PieceT>,
+    casesThreatened: number[]
+  ) {
+    for (const c of casesThreatened) {
+      const piece = pieceCases.get(this.revertCases.get(c) ?? "");
+      if (piece && piece.type === "k" && piece.color === color) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   revertNumbsToCoords(
     results: [number, number, string][]
