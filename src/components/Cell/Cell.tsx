@@ -1,8 +1,8 @@
 import { useDrop } from "react-dnd";
 
 import "./Cell.css";
-import Piece from "./Piece";
-import { PieceT } from "../types/pieces";
+import Piece from "../Piece/Piece";
+import { PieceT } from "../../types/pieces";
 
 export default function Cell({
   coords,

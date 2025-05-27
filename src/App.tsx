@@ -3,7 +3,7 @@ import { TouchBackend } from "react-dnd-touch-backend";
 
 import "./styles.css";
 import "./App.css";
-import Board from "./components/Board";
+import Board from "./components/Board/Board";
 import { lts, nbs } from "./utils/chessMoves";
 
 function App() {
@@ -20,9 +20,14 @@ function App() {
 
   return (
     <>
-      <DndProvider backend={TouchBackend} options={{ enableMouseEvents: true }}>
-        <Board convertCases={convertCases} revertCases={revertConvertCases} />
-      </DndProvider>
+      <div className="board-container">
+        <DndProvider
+          backend={TouchBackend}
+          options={{ enableMouseEvents: true }}
+        >
+          <Board convertCases={convertCases} revertCases={revertConvertCases} />
+        </DndProvider>
+      </div>
     </>
   );
 }

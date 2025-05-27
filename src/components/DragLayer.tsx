@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import type { XYCoord } from "react-dnd";
 import { useDragLayer } from "react-dnd";
-import Piece from "./Piece";
+import Piece from "./Piece/Piece";
 
 const layerStyles: CSSProperties = {
   position: "fixed",
@@ -15,7 +15,7 @@ const layerStyles: CSSProperties = {
 
 function getItemStyles(
   initialOffset: XYCoord | null,
-  currentOffset: XYCoord | null,
+  currentOffset: XYCoord | null
 ) {
   if (!initialOffset || !currentOffset) {
     return {
