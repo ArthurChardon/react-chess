@@ -72,8 +72,8 @@ export class MovesController {
     this.blackCanOO = blackCanOO;
 
     if (computeAttackedCases) {
-      this.casesAttacked("w");
-      this.casesAttacked("b");
+      this.whiteAttackedCases = this.casesAttacked("w");
+      this.blackAttackedCases = this.casesAttacked("b");
     }
   }
 
@@ -193,6 +193,7 @@ export class MovesController {
       this.isEmpty(61) &&
       this.isEmpty(62)
     ) {
+      console.log("can castle", this.whiteAttackedCases);
       let pathThreatened = false;
       for (const threathenedCase of this.whiteAttackedCases) {
         if (threathenedCase == 61 || threathenedCase == 62) {
@@ -341,7 +342,7 @@ export class MovesController {
         }
       }
     }
-    return availableMoves.concat(this.capture_pawn(pos1, color, sim));
+    return availableMoves.concat(this.capturePawn(pos1, color, sim));
   }
 
   isEmpty(numb: number) {
@@ -411,7 +412,7 @@ export class MovesController {
         pCases = [];
         switch (piece.type) {
           case "p": {
-            pCases = shadowController.capture_pawn(newCoords, piece.color, sim);
+            pCases = shadowController.capturePawn(newCoords, piece.color, sim);
             break;
           }
           case "r": {
@@ -455,7 +456,7 @@ export class MovesController {
     return threatsResults;
   }
 
-  capture_pawn(pos1: number, color: ChessColor, sim?: boolean) {
+  capturePawn(pos1: number, color: ChessColor, sim?: boolean) {
     const availableMoves: [number, number, string][] = [];
     if (color === "w") {
       //Capture upper left
