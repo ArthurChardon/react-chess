@@ -4,7 +4,7 @@ import "./Piece.css";
 
 import { useDrag } from "react-dnd";
 import { getEmptyImage } from "react-dnd-html5-backend";
-import { PieceT } from "../types/pieces";
+import { PieceT } from "../../types/pieces";
 
 function getStyles(isDragging: boolean): CSSProperties {
   return {
@@ -21,21 +21,22 @@ export default function Piece({
   coords?: [string, number];
   draggable?: boolean;
 }) {
-  const [{ isDragging }, dragRef, preview] = useDrag(() => ({
-    type: "piece",
-    item: { piece, coords },
-    collect: (monitor) => ({
-      isDragging: !!monitor.isDragging(),
-    })
-  }), [piece]);
+  const [{ isDragging }, dragRef, preview] = useDrag(
+    () => ({
+      type: "piece",
+      item: { piece, coords },
+      collect: (monitor) => ({
+        isDragging: !!monitor.isDragging(),
+      }),
+    }),
+    [piece]
+  );
 
   useEffect(() => {
     preview(getEmptyImage(), { captureDraggingState: true });
   }, []);
 
-  function pieceToSymbol(
-    piece: PieceT | undefined,
-  ): string {
+  function pieceToSymbol(piece: PieceT | undefined): string {
     if (!piece) return "";
     return piece.color + piece.type.toUpperCase();
   }

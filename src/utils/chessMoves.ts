@@ -1,3 +1,4 @@
+import { Move } from "../types/moves";
 import { ChessColor, ChessPieceType, PieceT } from "../types/pieces";
 
 const tab120 = [
@@ -70,6 +71,7 @@ export class MovesController {
     this.whiteCanOO = whiteCanOO;
     this.blackCanOOO = blackCanOOO;
     this.blackCanOO = blackCanOO;
+    console.log(this.whiteCanOO);
 
     if (computeAttackedCases) {
       this.whiteAttackedCases = this.casesAttacked("w");
@@ -81,7 +83,7 @@ export class MovesController {
     pieceValue: ChessPieceType,
     pieceColor: ChessColor,
     pieceCoords: string
-  ): [string, string, string][] {
+  ): Move[] {
     const numPieceCase = this.convertCases.get(pieceCoords) ?? null;
     if (numPieceCase === null) return [];
 
@@ -89,7 +91,7 @@ export class MovesController {
 
     switch (pieceValue) {
       case "p": {
-        availablesCases = this.moev2Pawn(numPieceCase, pieceColor);
+        availablesCases = this.move2Pawn(numPieceCase, pieceColor);
         break;
       }
       case "r": {
@@ -111,7 +113,7 @@ export class MovesController {
         break;
       }
       case "k": {
-        availablesCases = this.move2King(numPieceCase, pieceColor, false); // à changer le booléen asap
+        availablesCases = this.move2King(numPieceCase, pieceColor);
         break;
       }
       default: {
@@ -163,12 +165,7 @@ export class MovesController {
     return availableMoves;
   }
 
-  move2King(
-    pos1: number,
-    color: ChessColor,
-    isAttacked: boolean,
-    sim?: boolean
-  ) {
+  move2King(pos1: number, color: ChessColor, sim?: boolean) {
     // il faut (pour le pion aussi) gérer les déplacements et les menaces, par exemple sur un roque, le roi peut se déplacer mais pas menacer sur une case
     const availableMoves: [number, number, string][] = [];
     for (const i of movesRook.concat(movesBishop)) {
@@ -182,6 +179,10 @@ export class MovesController {
         }
       }
     }
+    const isAttacked =
+      color === "w"
+        ? this.whiteAttackedCases.includes(pos1)
+        : this.blackAttackedCases.includes(pos1);
     if (isAttacked) {
       return availableMoves;
     }
@@ -193,7 +194,6 @@ export class MovesController {
       this.isEmpty(61) &&
       this.isEmpty(62)
     ) {
-      console.log("can castle", this.whiteAttackedCases);
       let pathThreatened = false;
       for (const threathenedCase of this.whiteAttackedCases) {
         if (threathenedCase == 61 || threathenedCase == 62) {
@@ -297,7 +297,7 @@ export class MovesController {
     return availableMoves;
   }
 
-  moev2Pawn(pos1: number, color: ChessColor, sim?: boolean) {
+  move2Pawn(pos1: number, color: ChessColor, sim?: boolean) {
     const availableMoves: [number, number, string][] = [];
     if (color === "w") {
       const n = tab120[tab64[pos1] - 10];
@@ -436,12 +436,7 @@ export class MovesController {
             break;
           }
           case "k": {
-            pCases = shadowController.move2King(
-              newCoords,
-              piece.color,
-              false,
-              sim
-            ); // à changer le booléen asap
+            pCases = shadowController.move2King(newCoords, piece.color, sim); // à changer le booléen asap
             break;
           }
         }
@@ -572,13 +567,11 @@ export class MovesController {
     return false;
   }
 
-  revertNumbsToCoords(
-    results: [number, number, string][]
-  ): [string, string, string][] {
-    return results.map((result) => [
-      this.revertCases.get(result[0]) ?? "",
-      this.revertCases.get(result[1]) ?? "",
-      result[2],
-    ]);
+  revertNumbsToCoords(results: [number, number, string][]): Move[] {
+    return results.map((result) => ({
+      from: this.revertCases.get(result[0]) ?? "",
+      to: this.revertCases.get(result[1]) ?? "",
+      ref: result[2],
+    }));
   }
 }

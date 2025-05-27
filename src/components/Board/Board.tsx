@@ -8,9 +8,10 @@ import DragLayer from "../DragLayer";
 import { ChessColor, ChessPieceType, PieceT } from "../../types/pieces";
 import { MovesController } from "../../utils/chessMoves";
 import Piece from "../Piece/Piece";
+import { Move } from "../../types/moves";
 
 let draggingPositionComputed = false;
-let legitimateMoves: [string, string, string][] = [];
+let legitimateMoves: Move[] = [];
 let selectableCells: string[] = [];
 let whiteCheck = false;
 let blackCheck = false;
@@ -76,7 +77,7 @@ export default function Board({
       pieceCoords
     );
     //console.log(legitimateMoves)
-    selectableCells = legitimateMoves.map((results) => results[1]);
+    selectableCells = legitimateMoves.map((results) => results.to);
   }
 
   if (!isDragging) {
@@ -96,85 +97,102 @@ export default function Board({
   function requestingMove(coords: [string, number]) {
     if (areCoordsLegitMove(coords, selectableCells)) {
       legitimateMoves.forEach((move) => {
-        if (move[1] === coords[0] + coords[1]) {
-          const piece = getPieceFromCoords(
-            move[0].split("") as [string, number]
-          );
-          const mapToUpdate = new Map(pieceMap);
-          enPassant = "";
-          if (piece) {
-            switch (move[2]) {
-              case "": {
-                // Default move
-                mapToUpdate.set(move[1], {
-                  type: piece.type,
-                  color: piece.color,
-                });
-                mapToUpdate.delete(move[0]);
-                setPieceMap(() => new Map(mapToUpdate));
-                break;
-              }
+        if (move.to !== coords[0] + coords[1]) {
+          return;
+        }
+        const piece = getPieceFromCoords(
+          move.from.split("") as [string, number]
+        );
+        if (piece?.type === "k") {
+          if (piece.color === "w") {
+            whiteCanOOO = false;
+            whiteCanOO = false;
+          } else {
+            blackCanOOO = false;
+            blackCanOO = false;
+          }
+        } else if (piece?.type === "r") {
+          if (piece.color === "w") {
+            console.log(move.from);
+            whiteCanOOO = whiteCanOOO && move.from !== "a1";
+            whiteCanOO = whiteCanOO && move.from !== "h1";
+          } else {
+            blackCanOOO = blackCanOOO && move.from !== "a8";
+            blackCanOO = blackCanOO && move.from !== "h8";
+          }
+        }
+        const mapToUpdate = new Map(pieceMap);
+        enPassant = "";
+        if (piece) {
+          switch (move.ref) {
+            case "": {
+              // Default move
+              mapToUpdate.set(move.to, {
+                type: piece.type,
+                color: piece.color,
+              });
+              mapToUpdate.delete(move.from);
+              setPieceMap(() => new Map(mapToUpdate));
+              break;
+            }
 
-              case "OO": {
-                const rookCase = piece.color === "w" ? "f1" : "f8";
-                mapToUpdate.set(move[1], {
-                  type: piece.type,
-                  color: piece.color,
-                });
-                mapToUpdate.set(rookCase, { type: "r", color: piece.color });
-                mapToUpdate.delete(move[0]);
-                mapToUpdate.delete(piece.color === "w" ? "h1" : "h8");
-                setPieceMap(() => new Map(mapToUpdate));
-                break;
-              }
-              case "OOO": {
-                const rookCase = piece.color === "w" ? "d1" : "d8";
-                mapToUpdate.set(move[1], {
-                  type: piece.type,
-                  color: piece.color,
-                });
-                mapToUpdate.set(rookCase, { type: "r", color: piece.color });
-                mapToUpdate.delete(move[0]);
-                mapToUpdate.delete(piece.color === "w" ? "a1" : "a8");
-                setPieceMap(() => new Map(mapToUpdate));
-                break;
-              }
+            case "OO": {
+              const rookCase = piece.color === "w" ? "f1" : "f8";
+              mapToUpdate.set(move.to, {
+                type: piece.type,
+                color: piece.color,
+              });
+              mapToUpdate.set(rookCase, { type: "r", color: piece.color });
+              mapToUpdate.delete(move.from);
+              mapToUpdate.delete(piece.color === "w" ? "h1" : "h8");
+              setPieceMap(() => new Map(mapToUpdate));
+              break;
+            }
+            case "OOO": {
+              const rookCase = piece.color === "w" ? "d1" : "d8";
+              mapToUpdate.set(move.to, {
+                type: piece.type,
+                color: piece.color,
+              });
+              mapToUpdate.set(rookCase, { type: "r", color: piece.color });
+              mapToUpdate.delete(move.from);
+              mapToUpdate.delete(piece.color === "w" ? "a1" : "a8");
+              setPieceMap(() => new Map(mapToUpdate));
+              break;
+            }
 
-              case "prom": {
-                // promote a pawn
-                setPromotionPick({
-                  color: piece.color,
-                  fromCoords: move[0],
-                  toCoords: move[1],
-                });
-                break;
-              }
+            case "prom": {
+              // promote a pawn
+              setPromotionPick({
+                color: piece.color,
+                fromCoords: move.from,
+                toCoords: move.to,
+              });
+              break;
+            }
 
-              case "2pawn": {
-                mapToUpdate.set(move[1], {
-                  type: piece.type,
-                  color: piece.color,
-                });
-                mapToUpdate.delete(move[0]);
-                enPassant =
-                  move[1][0] + (Number(move[0][1]) + Number(move[1][1])) / 2;
-                setPieceMap(() => new Map(mapToUpdate));
-                break;
-              }
+            case "2pawn": {
+              mapToUpdate.set(move.to, {
+                type: piece.type,
+                color: piece.color,
+              });
+              mapToUpdate.delete(move.from);
+              enPassant =
+                move.to[0] + (Number(move.from[1]) + Number(move.from[1])) / 2;
+              setPieceMap(() => new Map(mapToUpdate));
+              break;
+            }
 
-              case "ep": {
-                mapToUpdate.set(move[1], {
-                  type: piece.type,
-                  color: piece.color,
-                });
-                mapToUpdate.delete(move[0]);
-                const posPawn2 = piece.color === "w" ? -1 : 1;
-                mapToUpdate.delete(
-                  move[1][0] + (Number(move[1][1]) + posPawn2)
-                );
-                setPieceMap(() => new Map(mapToUpdate));
-                break;
-              }
+            case "ep": {
+              mapToUpdate.set(move.to, {
+                type: piece.type,
+                color: piece.color,
+              });
+              mapToUpdate.delete(move.from);
+              const posPawn2 = piece.color === "w" ? -1 : 1;
+              mapToUpdate.delete(move.to[0] + (Number(move.to[1]) + posPawn2));
+              setPieceMap(() => new Map(mapToUpdate));
+              break;
             }
           }
         }
