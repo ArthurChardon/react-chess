@@ -24,9 +24,11 @@ let enPassant = "";
 export default function Board({
   convertCases,
   revertCases,
+  freeMoves,
 }: {
   convertCases: Map<string, number>;
   revertCases: Map<number, string>;
+  freeMoves: boolean;
 }) {
   const promotionPieces: ChessPieceType[] = ["q", "r", "b", "n"];
   const [pieceMap, setPieceMap] = useState(
@@ -44,6 +46,16 @@ export default function Board({
     color: ChessColor;
   } | null>(null);
 
+  const [playerToMove, setPlayerToMove] = useState<ChessColor | null>(() =>
+    freeMoves ? null : "w"
+  );
+
+  if (freeMoves && playerToMove !== null) {
+    setPlayerToMove(null);
+  } else if (!freeMoves && playerToMove === null) {
+    setPlayerToMove("w");
+  }
+
   const { isDragging, item } = useDragLayer((monitor) => ({
     item: monitor.getItem(),
     itemType: monitor.getItemType(),
@@ -55,29 +67,31 @@ export default function Board({
     const pieceCoords = item.coords.join("");
     const pieceColor = piece.color;
     const pieceValue = piece.type;
-    const controller = new MovesController(
-      pieceMap,
-      convertCases,
-      revertCases,
-      true,
-      {
-        whiteCheck,
-        blackCheck,
-        whiteCanOOO,
-        whiteCanOO,
-        blackCanOOO,
-        blackCanOO,
-        enPassant,
-      }
-    );
-    draggingPositionComputed = true;
-    legitimateMoves = controller.availableMovesFrom(
-      pieceValue,
-      pieceColor,
-      pieceCoords
-    );
-    //console.log(legitimateMoves)
-    selectableCells = legitimateMoves.map((results) => results.to);
+    if (playerToMove === null || pieceColor === playerToMove) {
+      const controller = new MovesController(
+        pieceMap,
+        convertCases,
+        revertCases,
+        true,
+        {
+          whiteCheck,
+          blackCheck,
+          whiteCanOOO,
+          whiteCanOO,
+          blackCanOOO,
+          blackCanOO,
+          enPassant,
+          playerToMove,
+        }
+      );
+      draggingPositionComputed = true;
+      legitimateMoves = controller.availableMovesFrom(
+        pieceValue,
+        pieceColor,
+        pieceCoords
+      );
+      selectableCells = legitimateMoves.map((results) => results.to);
+    }
   }
 
   if (!isDragging) {
@@ -113,7 +127,6 @@ export default function Board({
           }
         } else if (piece?.type === "r") {
           if (piece.color === "w") {
-            console.log(move.from);
             whiteCanOOO = whiteCanOOO && move.from !== "a1";
             whiteCanOO = whiteCanOO && move.from !== "h1";
           } else {
@@ -195,6 +208,7 @@ export default function Board({
               break;
             }
           }
+          setPlayerToMove((prev) => (prev === "w" ? "b" : "w"));
         }
       });
     }
@@ -220,9 +234,18 @@ export default function Board({
 
   return (
     <>
-      <div className="board">
+      <div
+        className={
+          "board" +
+          (playerToMove === "w"
+            ? " white-to-move"
+            : playerToMove === "b"
+              ? " black-to-move"
+              : "")
+        }
+      >
         {promotionPick && (
-          <div className="promotionPick">
+          <div className="promotion-pick">
             {promotionPieces.map((pieceType) => (
               <button
                 className="functional-button"

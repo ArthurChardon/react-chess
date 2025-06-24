@@ -33,6 +33,8 @@ export class MovesController {
   blackCanOOO? = true;
   blackCanOO? = true;
 
+  playerToMove: ChessColor | null = null;
+
   enPassant? = -1;
 
   whiteAttackedCases: number[] = [];
@@ -51,6 +53,7 @@ export class MovesController {
       blackCanOOO,
       blackCanOO,
       enPassant,
+      playerToMove,
     }: {
       whiteCheck?: boolean;
       blackCheck?: boolean;
@@ -59,6 +62,7 @@ export class MovesController {
       blackCanOOO?: boolean;
       blackCanOO?: boolean;
       enPassant?: string;
+      playerToMove?: ChessColor | null;
     }
   ) {
     this.cases = cases;
@@ -71,7 +75,7 @@ export class MovesController {
     this.whiteCanOO = whiteCanOO;
     this.blackCanOOO = blackCanOOO;
     this.blackCanOO = blackCanOO;
-    console.log(this.whiteCanOO);
+    this.playerToMove = playerToMove ?? null;
 
     if (computeAttackedCases) {
       this.whiteAttackedCases = this.casesAttacked("w");
