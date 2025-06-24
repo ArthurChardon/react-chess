@@ -22,3 +22,40 @@
   gap: 1rem;
   padding: 1rem;
 }
+
+.animate-endgame {
+  animation: endgame 0.4s linear;
+}
+
+@keyframes endgame {
+  0% {
+    -webkit-transform: translate(0);
+    transform: translate(0);
+  }
+
+  20% {
+    -webkit-transform: translate(2px, -2px) rotate(-0.5deg);
+    transform: translate(2px, -2px) rotate(-0.5deg);
+  }
+
+  40% {
+    -webkit-transform: translate(2px, 2px);
+    transform: translate(2px, 2px);
+    filter: blur(2px) grayscale(0.5);
+  }
+
+  60% {
+    -webkit-transform: translate(-2px, 2px) rotate(0.5deg);
+    transform: translate(-2px, 2px) rotate(0.5deg);
+  }
+
+  80% {
+    -webkit-transform: translate(-2px, -2px);
+    transform: translate(-2px, -2px);
+  }
+
+  100% {
+    -webkit-transform: translate(0);
+    transform: translate(0);
+  }
+}

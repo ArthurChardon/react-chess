@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { RefObject, useRef, useState } from "react";
 import { useDragLayer } from "react-dnd";
 
 import { initialBoard } from "../../utils/initialBoard";
@@ -16,16 +16,6 @@ enum EndGame {
   DRAW = "DRAW",
 }
 
-let draggingPositionComputed = false;
-let legitimateMoves: Move[] = [];
-let selectableCells: string[] = [];
-let whiteCanOOO = true;
-let whiteCanOO = true;
-let blackCanOOO = true;
-let blackCanOO = true;
-let enPassant = "";
-let endGame: EndGame | null = null;
-
 export default function Board({
   convertCases,
   revertCases,
@@ -35,7 +25,7 @@ export default function Board({
   convertCases: Map<string, number>;
   revertCases: Map<number, string>;
   freeMoves: boolean;
-  endgameReached: (endGame: EndGame) => void;
+  endgameReached: (endGame: EndGame | null) => void;
 }) {
   const promotionPieces: ChessPieceType[] = ["q", "r", "b", "n"];
   const [pieceMap, setPieceMap] = useState(
@@ -46,6 +36,22 @@ export default function Board({
       ])
     )
   );
+  const castleStatus = useRef<{
+    whiteCanOO: boolean;
+    whiteCanOOO: boolean;
+    blackCanOO: boolean;
+    blackCanOOO: boolean;
+  }>({
+    whiteCanOO: true,
+    whiteCanOOO: true,
+    blackCanOO: true,
+    blackCanOOO: true,
+  });
+  const enPassant = useRef("");
+  const draggingPositionComputed = useRef(false);
+  const legitimateMoves: RefObject<Move[]> = useRef([]);
+  const selectableCells: RefObject<string[]> = useRef([]);
+  const endGame: RefObject<EndGame | null> = useRef(null);
 
   const [whiteCheck, setWhiteCheck] = useState(false);
   const [blackCheck, setBlackCheck] = useState(false);
@@ -66,7 +72,7 @@ export default function Board({
     isDragging: monitor.isDragging(),
   }));
 
-  if (endGame === null) {
+  if (endGame.current === null) {
     if (freeMoves && playerToMove !== null) {
       setPlayerToMove(null);
     } else if (!freeMoves && playerToMove === null) {
@@ -85,17 +91,17 @@ export default function Board({
       const movesCount = controller.availableMovesCount(playerToMove);
       if (movesCount === 0) {
         if (playerToMove === "w" && whiteCheck) {
-          endGame = EndGame.WHITE_CM;
+          endGame.current = EndGame.WHITE_CM;
         } else if (playerToMove === "b" && blackCheck) {
-          endGame = EndGame.BLACK_CM;
+          endGame.current = EndGame.BLACK_CM;
         } else {
-          endGame = EndGame.DRAW;
+          endGame.current = EndGame.DRAW;
         }
-        endgameReached(endGame);
+        setTimeout(() => endgameReached(endGame.current), 0);
       }
     }
 
-    if (isDragging && !draggingPositionComputed) {
+    if (isDragging && !draggingPositionComputed.current && castleStatus) {
       const piece = item.piece as PieceT;
       const pieceCoords = item.coords.join("");
       const pieceColor = piece.color;
@@ -109,28 +115,30 @@ export default function Board({
           {
             whiteCheck,
             blackCheck,
-            whiteCanOOO,
-            whiteCanOO,
-            blackCanOOO,
-            blackCanOO,
-            enPassant,
+            whiteCanOOO: castleStatus.current.whiteCanOOO,
+            whiteCanOO: castleStatus.current.whiteCanOO,
+            blackCanOOO: castleStatus.current.blackCanOOO,
+            blackCanOO: castleStatus.current.blackCanOO,
+            enPassant: enPassant.current,
             playerToMove,
           }
         );
-        draggingPositionComputed = true;
-        legitimateMoves = controller.availableMovesFrom(
+        draggingPositionComputed.current = true;
+        legitimateMoves.current = controller.availableMovesFrom(
           pieceValue,
           pieceColor,
           pieceCoords
         );
-        selectableCells = legitimateMoves.map((results) => results.to);
+        selectableCells.current = legitimateMoves.current.map(
+          (results) => results.to
+        );
       }
     }
 
     if (!isDragging) {
-      draggingPositionComputed = false;
-      legitimateMoves = [];
-      selectableCells = [];
+      draggingPositionComputed.current = false;
+      legitimateMoves.current = [];
+      selectableCells.current = [];
     }
   }
 
@@ -143,8 +151,8 @@ export default function Board({
   }
 
   function requestingMove(coords: [string, number]) {
-    if (areCoordsLegitMove(coords, selectableCells)) {
-      legitimateMoves.forEach((move) => {
+    if (areCoordsLegitMove(coords, selectableCells.current)) {
+      legitimateMoves.current.forEach((move) => {
         if (move.to !== coords[0] + coords[1]) {
           return;
         }
@@ -153,23 +161,27 @@ export default function Board({
         );
         if (piece?.type === "k") {
           if (piece.color === "w") {
-            whiteCanOOO = false;
-            whiteCanOO = false;
+            castleStatus.current.whiteCanOOO = false;
+            castleStatus.current.whiteCanOO = false;
           } else {
-            blackCanOOO = false;
-            blackCanOO = false;
+            castleStatus.current.blackCanOOO = false;
+            castleStatus.current.blackCanOO = false;
           }
         } else if (piece?.type === "r") {
           if (piece.color === "w") {
-            whiteCanOOO = whiteCanOOO && move.from !== "a1";
-            whiteCanOO = whiteCanOO && move.from !== "h1";
+            castleStatus.current.whiteCanOOO =
+              castleStatus.current.whiteCanOOO && move.from !== "a1";
+            castleStatus.current.whiteCanOO =
+              castleStatus.current.whiteCanOO && move.from !== "h1";
           } else {
-            blackCanOOO = blackCanOOO && move.from !== "a8";
-            blackCanOO = blackCanOO && move.from !== "h8";
+            castleStatus.current.blackCanOOO =
+              castleStatus.current.blackCanOOO && move.from !== "a8";
+            castleStatus.current.blackCanOO =
+              castleStatus.current.blackCanOO && move.from !== "h8";
           }
         }
         const mapToUpdate = new Map(pieceMap);
-        enPassant = "";
+        enPassant.current = "";
         if (piece) {
           switch (move.ref) {
             case "": {
@@ -224,7 +236,7 @@ export default function Board({
                 color: piece.color,
               });
               mapToUpdate.delete(move.from);
-              enPassant =
+              enPassant.current =
                 move.to[0] + (Number(move.from[1]) + Number(move.from[1])) / 2;
               setPieceMap(() => new Map(mapToUpdate));
               break;
@@ -314,7 +326,10 @@ export default function Board({
                   coords={[y, x]}
                   dark={(i + j) % 2 === 1}
                   piece={getPieceFromCoords([y, x])}
-                  legitMove={areCoordsLegitMove([y, x], selectableCells)}
+                  legitMove={areCoordsLegitMove(
+                    [y, x],
+                    selectableCells.current
+                  )}
                   requestMove={(coords: [string, number]) => {
                     requestingMove(coords);
                   }}
@@ -327,8 +342,8 @@ export default function Board({
                   isCheckmated={
                     getPieceFromCoords([y, x])?.type === "k" &&
                     (getPieceFromCoords([y, x])?.color === "w"
-                      ? endGame === EndGame.WHITE_CM
-                      : endGame === EndGame.BLACK_CM)
+                      ? endGame.current === EndGame.WHITE_CM
+                      : endGame.current === EndGame.BLACK_CM)
                   }
                 />
               ))
