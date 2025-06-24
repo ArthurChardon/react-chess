@@ -10,6 +10,12 @@ import { MovesController } from "../../utils/chessMoves";
 import Piece from "../Piece/Piece";
 import { Move } from "../../types/moves";
 
+enum EndGame {
+  WHITE_CM = "WHITE_CHECKMATE",
+  BLACK_CM = "BLACK_CHECKMATE",
+  DRAW = "DRAW",
+}
+
 let draggingPositionComputed = false;
 let legitimateMoves: Move[] = [];
 let selectableCells: string[] = [];
@@ -18,15 +24,18 @@ let whiteCanOO = true;
 let blackCanOOO = true;
 let blackCanOO = true;
 let enPassant = "";
+let endGame: EndGame | null = null;
 
 export default function Board({
   convertCases,
   revertCases,
   freeMoves,
+  endgameReached,
 }: {
   convertCases: Map<string, number>;
   revertCases: Map<number, string>;
   freeMoves: boolean;
+  endgameReached: (endGame: EndGame) => void;
 }) {
   const promotionPieces: ChessPieceType[] = ["q", "r", "b", "n"];
   const [pieceMap, setPieceMap] = useState(
@@ -51,54 +60,78 @@ export default function Board({
     freeMoves ? null : "w"
   );
 
-  if (freeMoves && playerToMove !== null) {
-    setPlayerToMove(null);
-  } else if (!freeMoves && playerToMove === null) {
-    setPlayerToMove("w");
-  }
-
   const { isDragging, item } = useDragLayer((monitor) => ({
     item: monitor.getItem(),
     itemType: monitor.getItemType(),
     isDragging: monitor.isDragging(),
   }));
 
-  if (isDragging && !draggingPositionComputed) {
-    const piece = item.piece as PieceT;
-    const pieceCoords = item.coords.join("");
-    const pieceColor = piece.color;
-    const pieceValue = piece.type;
-    if (playerToMove === null || pieceColor === playerToMove) {
+  if (endGame === null) {
+    if (freeMoves && playerToMove !== null) {
+      setPlayerToMove(null);
+    } else if (!freeMoves && playerToMove === null) {
+      setPlayerToMove("w");
+    }
+
+    if (playerToMove !== null) {
       const controller = new MovesController(
         pieceMap,
         convertCases,
         revertCases,
         true,
-        {
-          whiteCheck,
-          blackCheck,
-          whiteCanOOO,
-          whiteCanOO,
-          blackCanOOO,
-          blackCanOO,
-          enPassant,
-          playerToMove,
-        }
+        {}
       );
-      draggingPositionComputed = true;
-      legitimateMoves = controller.availableMovesFrom(
-        pieceValue,
-        pieceColor,
-        pieceCoords
-      );
-      selectableCells = legitimateMoves.map((results) => results.to);
-    }
-  }
 
-  if (!isDragging) {
-    draggingPositionComputed = false;
-    legitimateMoves = [];
-    selectableCells = [];
+      const movesCount = controller.availableMovesCount(playerToMove);
+      if (movesCount === 0) {
+        if (playerToMove === "w" && whiteCheck) {
+          endGame = EndGame.WHITE_CM;
+        } else if (playerToMove === "b" && blackCheck) {
+          endGame = EndGame.BLACK_CM;
+        } else {
+          endGame = EndGame.DRAW;
+        }
+        endgameReached(endGame);
+      }
+    }
+
+    if (isDragging && !draggingPositionComputed) {
+      const piece = item.piece as PieceT;
+      const pieceCoords = item.coords.join("");
+      const pieceColor = piece.color;
+      const pieceValue = piece.type;
+      if (playerToMove === null || pieceColor === playerToMove) {
+        const controller = new MovesController(
+          pieceMap,
+          convertCases,
+          revertCases,
+          true,
+          {
+            whiteCheck,
+            blackCheck,
+            whiteCanOOO,
+            whiteCanOO,
+            blackCanOOO,
+            blackCanOO,
+            enPassant,
+            playerToMove,
+          }
+        );
+        draggingPositionComputed = true;
+        legitimateMoves = controller.availableMovesFrom(
+          pieceValue,
+          pieceColor,
+          pieceCoords
+        );
+        selectableCells = legitimateMoves.map((results) => results.to);
+      }
+    }
+
+    if (!isDragging) {
+      draggingPositionComputed = false;
+      legitimateMoves = [];
+      selectableCells = [];
+    }
   }
 
   function getPieceFromCoords(coords: [string, number]): PieceT | undefined {
@@ -290,6 +323,12 @@ export default function Board({
                     (getPieceFromCoords([y, x])?.color === "w"
                       ? whiteCheck
                       : blackCheck)
+                  }
+                  isCheckmated={
+                    getPieceFromCoords([y, x])?.type === "k" &&
+                    (getPieceFromCoords([y, x])?.color === "w"
+                      ? endGame === EndGame.WHITE_CM
+                      : endGame === EndGame.BLACK_CM)
                   }
                 />
               ))

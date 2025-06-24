@@ -578,4 +578,22 @@ export class MovesController {
       ref: result[2],
     }));
   }
+
+  availableMovesCount(color: ChessColor) {
+    let count = 0;
+    this.cases.forEach((piece, coords) => {
+      if (piece && piece.color === color) {
+        const numPieceCase = this.convertCases.get(coords) ?? null;
+        if (numPieceCase !== null) {
+          const moves = this.availableMovesFrom(
+            piece.type,
+            piece.color,
+            coords
+          );
+          count += moves.length;
+        }
+      }
+    });
+    return count;
+  }
 }

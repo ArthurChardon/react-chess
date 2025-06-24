@@ -11,6 +11,7 @@ export default function Cell({
   legitMove,
   requestMove,
   isChecked = false,
+  isCheckmated = false,
 }: {
   coords: [string, number];
   dark?: boolean;
@@ -18,6 +19,7 @@ export default function Cell({
   legitMove: boolean;
   requestMove: (coords: [string, number]) => void;
   isChecked?: boolean;
+  isCheckmated?: boolean;
 }) {
   const [{ isOver }, dropRef] = useDrop(
     () => ({
@@ -39,7 +41,8 @@ export default function Cell({
       className={
         "cell " +
         (dark ? "dark-cell" : "light-cell") +
-        (isChecked ? " checked" : "")
+        (isChecked && !isCheckmated ? " checked" : "") +
+        (isCheckmated ? " mated" : "")
       }
       ref={dropRef}
     >
@@ -72,7 +75,7 @@ export default function Cell({
             transform: "translate(-50%, -50%)",
             height: "25%",
             width: "25%",
-            zIndex: 1,
+            zIndex: 20,
             opacity: 0.35,
             backgroundColor: "grey",
             borderRadius: "50%",

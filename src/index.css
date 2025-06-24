@@ -72,8 +72,35 @@ body {
 }
 
 h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+  font-size: var(--text-4xl);
+  line-height: var(--text-4xl--line-height);
+  font-weight: 800;
+  letter-spacing: var(--tracking-tight);
+  scroll-margin: calc(var(--spacing) * 20);
+}
+
+h2 {
+  font-size: var(--text-3xl);
+  line-height: var(--text-3xl--line-height);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  scroll-margin: calc(var(--spacing) * 20);
+}
+
+h3 {
+  font-size: var(--text-2xl);
+  line-height: var(--text-2xl--line-height);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  scroll-margin: calc(var(--spacing) * 20);
+}
+
+h4 {
+  font-size: var(--text-xl);
+  line-height: var(--text-xl--line-height);
+  font-weight: 600;
+  letter-spacing: var(--tracking-tight);
+  scroll-margin: calc(var(--spacing) * 20);
 }
 
 .functional-button {
@@ -155,7 +182,7 @@ button:focus-visible {
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
+  --background: #242424;
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);

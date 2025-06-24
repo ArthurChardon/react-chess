@@ -4,15 +4,16 @@
   position: relative;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
-  border: 2px solid #888;
+  border: 6px solid #888;
+  border-radius: 6px;
 }
 
 .white-to-move {
-  border: 2px solid #fff;
+  border-color: #fff;
 }
 
 .black-to-move {
-  border: 2px solid #000;
+  border-color: #000;
 }
 
 .promotion-pick {
