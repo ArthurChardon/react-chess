@@ -10,12 +10,14 @@ export default function Cell({
   piece,
   legitMove,
   requestMove,
+  isChecked = false,
 }: {
   coords: [string, number];
   dark?: boolean;
   piece?: PieceT;
   legitMove: boolean;
   requestMove: (coords: [string, number]) => void;
+  isChecked?: boolean;
 }) {
   const [{ isOver }, dropRef] = useDrop(
     () => ({
@@ -34,7 +36,11 @@ export default function Cell({
 
   return (
     <div
-      className={"cell " + (dark ? "dark-cell" : "light-cell")}
+      className={
+        "cell " +
+        (dark ? "dark-cell" : "light-cell") +
+        (isChecked ? " checked" : "")
+      }
       ref={dropRef}
     >
       <div

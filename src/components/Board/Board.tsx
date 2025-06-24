@@ -13,8 +13,6 @@ import { Move } from "../../types/moves";
 let draggingPositionComputed = false;
 let legitimateMoves: Move[] = [];
 let selectableCells: string[] = [];
-let whiteCheck = false;
-let blackCheck = false;
 let whiteCanOOO = true;
 let whiteCanOO = true;
 let blackCanOOO = true;
@@ -39,6 +37,9 @@ export default function Board({
       ])
     )
   );
+
+  const [whiteCheck, setWhiteCheck] = useState(false);
+  const [blackCheck, setBlackCheck] = useState(false);
 
   const [promotionPick, setPromotionPick] = useState<{
     fromCoords: string;
@@ -209,6 +210,15 @@ export default function Board({
             }
           }
           setPlayerToMove((prev) => (prev === "w" ? "b" : "w"));
+          const controller = new MovesController(
+            mapToUpdate,
+            convertCases,
+            revertCases,
+            true,
+            {}
+          );
+          setWhiteCheck(controller.whiteCheck ?? false);
+          setBlackCheck(controller.blackCheck ?? false);
         }
       });
     }
@@ -275,6 +285,12 @@ export default function Board({
                   requestMove={(coords: [string, number]) => {
                     requestingMove(coords);
                   }}
+                  isChecked={
+                    getPieceFromCoords([y, x])?.type === "k" &&
+                    (getPieceFromCoords([y, x])?.color === "w"
+                      ? whiteCheck
+                      : blackCheck)
+                  }
                 />
               ))
           )}

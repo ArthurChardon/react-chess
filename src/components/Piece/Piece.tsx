@@ -44,7 +44,11 @@ export default function Piece({
 
   return (
     <>
-      <div ref={draggable ? dragRef : null} style={getStyles(isDragging)}>
+      <div
+        className="z-10"
+        ref={draggable ? dragRef : null}
+        style={getStyles(isDragging)}
+      >
         <img
           className={"piece-cell " + (isDragging ? "dragged" : "")}
           src={srcImage}

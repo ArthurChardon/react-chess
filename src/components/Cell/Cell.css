@@ -6,15 +6,51 @@
   width: 6rem;
   height: 6rem;
   color: #000;
-  font-size: 75px;
+  font-size: 15px;
   font-family: Pecita, sans-serif;
   line-height: 6rem;
+
+  &.checked::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 95%;
+    height: 95%;
+    border-radius: 50%;
+    box-sizing: border-box;
+    transform: translate(-50%, -50%);
+    opacity: 30%;
+    animation: checked 0.25s ease-in-out forwards;
+  }
 }
 
 .dark-cell {
   background-color: #bc6c25;
+
+  &.checked::after {
+    border: 2px solid #faedcd;
+    background-image: radial-gradient(transparent, #faedcd);
+  }
 }
 
 .light-cell {
   background-color: #fefae0;
+
+  &.checked::after {
+    border: 2px solid #bc4749;
+    background-image: radial-gradient(transparent, #bc4749);
+  }
+}
+
+@keyframes checked {
+  from {
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0;
+  }
+
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.3;
+  }
 }
