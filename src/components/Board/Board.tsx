@@ -370,6 +370,8 @@ export default function Board({
                 <Cell
                   key={x.toString() + "-" + y}
                   coords={[y, x]}
+                  annotation={x === 1 ? y : ""}
+                  secondAnnotation={y === "h" ? x.toString() : ""}
                   dark={(i + j) % 2 === 1}
                   piece={getPieceFromCoords([y, x])}
                   legitMove={areCoordsLegitMove(

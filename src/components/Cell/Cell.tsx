@@ -6,6 +6,8 @@ import { PieceT } from "../../types/pieces";
 
 export default function Cell({
   coords,
+  annotation,
+  secondAnnotation,
   dark,
   piece,
   legitMove,
@@ -14,6 +16,8 @@ export default function Cell({
   isCheckmated = false,
 }: {
   coords: [string, number];
+  annotation?: string;
+  secondAnnotation?: string;
   dark?: boolean;
   piece?: PieceT;
   legitMove: boolean;
@@ -47,9 +51,20 @@ export default function Cell({
       ref={dropRef}
     >
       <div
-        style={{ display: "none", position: "absolute", pointerEvents: "none" }}
+        className="annotation"
+        style={{
+          bottom: "0.2em",
+        }}
       >
-        {coords}
+        {annotation}
+      </div>
+      <div
+        className="annotation"
+        style={{
+          top: "0.2em",
+        }}
+      >
+        {secondAnnotation}
       </div>
       {piece && <Piece piece={piece} coords={coords} draggable={true}></Piece>}
       {isOver && legitMove && (

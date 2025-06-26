@@ -78,3 +78,11 @@
     opacity: 1;
   }
 }
+
+.annotation {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+  line-height: 100%;
+  right: 0.2em;
+}
