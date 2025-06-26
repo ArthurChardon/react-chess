@@ -17,6 +17,7 @@ import {
   StepForward,
 } from "lucide-react";
 import { useMoves } from "./context/MovesContext";
+import { Progress } from "./components/ui/progress";
 
 function App() {
   const convertCases = new Map<string, number>();
@@ -56,12 +57,19 @@ function App() {
       <div className="dark board-container bg-background">
         <Card className="w-full items-center">
           <div className="main-card-grid">
+            <Card className="col-start-1 col-end-2 p-4 bg-secondary"></Card>
             <div
               className={
-                "col-start-2 col-end-3 flex justify-center items-center" +
+                "col-start-2 col-end-3 flex justify-center items-center flex-col" +
                 (animateEndgame ? " animate-endgame" : "")
               }
             >
+              <Progress
+                className={
+                  "moves-pb mb-4" + (pieceMaps.length === 1 ? " opacity-0" : "")
+                }
+                value={(100 * displayedMoveIndex) / (pieceMaps.length - 1)}
+              ></Progress>
               <DndProvider
                 backend={TouchBackend}
                 options={{ enableMouseEvents: true }}
@@ -95,6 +103,7 @@ function App() {
                   <RefreshCw></RefreshCw>
                 </Button>
                 <Button
+                  disabled={displayedMoveIndex === 0}
                   onClick={() => {
                     firstDisplayedMoveIndex();
                   }}

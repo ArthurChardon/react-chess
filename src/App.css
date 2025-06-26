@@ -21,6 +21,11 @@
   grid-template-columns: auto 1fr auto;
   gap: 1rem;
   padding: 1rem;
+  justify-items: center;
+}
+
+.moves-pb {
+  transition: opacity 0.5s ease-in-out;
 }
 
 .animate-endgame {

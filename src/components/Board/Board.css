@@ -4,8 +4,8 @@
   position: relative;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
-  border: 6px solid #888;
-  border-radius: 6px;
+  border: 16px ridge #333;
+  border-radius: 16px;
 }
 
 .white-to-move {

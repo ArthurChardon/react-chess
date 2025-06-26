@@ -97,7 +97,7 @@ export default function Board({
     });
   }
 
-  if (endGame.current === null) {
+  if (endGame.current === null && displayedMoveIndex === pieceMaps.length - 1) {
     if (freeMoves && playerToMove !== null) {
       setPlayerToMove(null);
     } else if (!freeMoves && playerToMove === null) {
@@ -319,7 +319,6 @@ export default function Board({
 
   return (
     <>
-      <div>{pieceMaps.length}</div>
       <div
         className={
           "board" +
