@@ -10,10 +10,11 @@ import { MovesController } from "../../utils/chessMoves";
 import Piece from "../Piece/Piece";
 import { Move } from "../../types/moves";
 import { useMoves } from "@/context/MovesContext";
+import { generateNotationFromMove } from "@/utils/movesNotations";
 
 enum EndGame {
-  WHITE_CM = "WHITE_CHECKMATE",
-  BLACK_CM = "BLACK_CHECKMATE",
+  WHITE_CM = "WHITE_CHECKMATED",
+  BLACK_CM = "BLACK_CHECKMATED",
   DRAW = "DRAW",
 }
 
@@ -36,6 +37,8 @@ export default function Board({
     addPieceMap,
     updatePieceMaps,
     firstDisplayedMoveIndex,
+    addMovesNotation,
+    lastMoveNotationCheckmate,
   } = useMoves();
 
   const [pieceMap, setPieceMap] = useState(
@@ -117,8 +120,10 @@ export default function Board({
       if (movesCount === 0) {
         if (playerToMove === "w" && whiteCheck) {
           endGame.current = EndGame.WHITE_CM;
+          lastMoveNotationCheckmate("b");
         } else if (playerToMove === "b" && blackCheck) {
           endGame.current = EndGame.BLACK_CM;
+          lastMoveNotationCheckmate("w");
         } else {
           endGame.current = EndGame.DRAW;
         }
@@ -175,7 +180,7 @@ export default function Board({
     return legitMoves.includes(coords[0] + coords[1]);
   }
 
-  function updateMap(map: Map<string, PieceT>) {
+  function updateMap(map: Map<string, PieceT>, move: Move) {
     setPieceMap(() => new Map(map));
     addPieceMap(map);
     setPlayerToMove((prev) => (prev === "w" ? "b" : "w"));
@@ -188,6 +193,13 @@ export default function Board({
     );
     setWhiteCheck(controller.whiteCheck ?? false);
     setBlackCheck(controller.blackCheck ?? false);
+    addMovesNotation(
+      generateNotationFromMove(
+        move,
+        pieceMap,
+        controller.whiteCheck || controller.blackCheck
+      )
+    );
   }
 
   function requestingMove(coords: [string, number]) {
@@ -231,11 +243,11 @@ export default function Board({
                 color: piece.color,
               });
               mapToUpdate.delete(move.from);
-              updateMap(mapToUpdate);
+              updateMap(mapToUpdate, move);
               break;
             }
 
-            case "OO": {
+            case "O-O": {
               const rookCase = piece.color === "w" ? "f1" : "f8";
               mapToUpdate.set(move.to, {
                 type: piece.type,
@@ -244,10 +256,10 @@ export default function Board({
               mapToUpdate.set(rookCase, { type: "r", color: piece.color });
               mapToUpdate.delete(move.from);
               mapToUpdate.delete(piece.color === "w" ? "h1" : "h8");
-              updateMap(mapToUpdate);
+              updateMap(mapToUpdate, move);
               break;
             }
-            case "OOO": {
+            case "O-O-O": {
               const rookCase = piece.color === "w" ? "d1" : "d8";
               mapToUpdate.set(move.to, {
                 type: piece.type,
@@ -256,7 +268,7 @@ export default function Board({
               mapToUpdate.set(rookCase, { type: "r", color: piece.color });
               mapToUpdate.delete(move.from);
               mapToUpdate.delete(piece.color === "w" ? "a1" : "a8");
-              updateMap(mapToUpdate);
+              updateMap(mapToUpdate, move);
               break;
             }
 
@@ -277,8 +289,8 @@ export default function Board({
               });
               mapToUpdate.delete(move.from);
               enPassant.current =
-                move.to[0] + (Number(move.from[1]) + Number(move.from[1])) / 2;
-              updateMap(mapToUpdate);
+                move.to[0] + (Number(move.from[1]) + Number(move.to[1])) / 2;
+              updateMap(mapToUpdate, move);
               break;
             }
 
@@ -290,7 +302,7 @@ export default function Board({
               mapToUpdate.delete(move.from);
               const posPawn2 = piece.color === "w" ? -1 : 1;
               mapToUpdate.delete(move.to[0] + (Number(move.to[1]) + posPawn2));
-              updateMap(mapToUpdate);
+              updateMap(mapToUpdate, move);
               break;
             }
           }
@@ -313,7 +325,11 @@ export default function Board({
       type: pieceType,
       color: promotionPick!.color,
     });
-    updateMap(mapToUpdate);
+    updateMap(mapToUpdate, {
+      from: promotionPick.fromCoords,
+      to: promotionPick.toCoords,
+      ref: "prom",
+    });
     setPromotionPick(null);
   }
 

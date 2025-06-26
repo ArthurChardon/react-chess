@@ -1,4 +1,4 @@
-import { Move } from "../types/moves";
+import { Move, MoveRef } from "../types/moves";
 import { ChessColor, ChessPieceType, PieceT } from "../types/pieces";
 
 const tab120 = [
@@ -91,7 +91,7 @@ export class MovesController {
     const numPieceCase = this.convertCases.get(pieceCoords) ?? null;
     if (numPieceCase === null) return [];
 
-    let availablesCases: [number, number, string][] = [];
+    let availablesCases: [number, number, MoveRef][] = [];
 
     switch (pieceValue) {
       case "p": {
@@ -128,7 +128,7 @@ export class MovesController {
   }
 
   move2Bishop(pos1: number, color: ChessColor, sim?: boolean) {
-    const availableMoves: [number, number, string][] = [];
+    const availableMoves: [number, number, MoveRef][] = [];
     for (const k of movesBishop) {
       let j = 1;
       while (true) {
@@ -154,7 +154,7 @@ export class MovesController {
   }
 
   move2Knight(pos1: number, color: ChessColor, sim?: boolean) {
-    const availableMoves: [number, number, string][] = [];
+    const availableMoves: [number, number, MoveRef][] = [];
     for (const i of movesKnight) {
       const n = tab120[tab64[pos1] + i];
       if (n != -1) {
@@ -171,7 +171,7 @@ export class MovesController {
 
   move2King(pos1: number, color: ChessColor, sim?: boolean) {
     // il faut (pour le pion aussi) gérer les déplacements et les menaces, par exemple sur un roque, le roi peut se déplacer mais pas menacer sur une case
-    const availableMoves: [number, number, string][] = [];
+    const availableMoves: [number, number, MoveRef][] = [];
     for (const i of movesRook.concat(movesBishop)) {
       const n = tab120[tab64[pos1] + i];
       if (n != -1) {
@@ -206,7 +206,7 @@ export class MovesController {
         }
       }
       if (!pathThreatened) {
-        availableMoves.push([pos1, 62, "OO"]);
+        availableMoves.push([pos1, 62, "O-O"]);
       }
     } else if (
       color === "b" &&
@@ -223,7 +223,7 @@ export class MovesController {
         }
       }
       if (!pathThreatened) {
-        availableMoves.push([pos1, 6, "OO"]);
+        availableMoves.push([pos1, 6, "O-O"]);
       }
     }
     if (
@@ -246,7 +246,7 @@ export class MovesController {
         }
       }
       if (!pathThreatened) {
-        availableMoves.push([pos1, 58, "OOO"]);
+        availableMoves.push([pos1, 58, "O-O-O"]);
       }
     } else if (
       color === "b" &&
@@ -268,7 +268,7 @@ export class MovesController {
         }
       }
       if (!pathThreatened) {
-        availableMoves.push([pos1, 2, "OOO"]);
+        availableMoves.push([pos1, 2, "O-O-O"]);
       }
     }
 
@@ -276,7 +276,7 @@ export class MovesController {
   }
 
   move2Rook(pos1: number, color: ChessColor, sim?: boolean) {
-    const availableMoves: [number, number, string][] = [];
+    const availableMoves: [number, number, MoveRef][] = [];
     for (const k of movesRook) {
       let j = 1;
       while (true) {
@@ -302,7 +302,7 @@ export class MovesController {
   }
 
   move2Pawn(pos1: number, color: ChessColor, sim?: boolean) {
-    const availableMoves: [number, number, string][] = [];
+    const availableMoves: [number, number, MoveRef][] = [];
     if (color === "w") {
       const n = tab120[tab64[pos1] - 10];
       if (n != -1) {
@@ -456,7 +456,7 @@ export class MovesController {
   }
 
   capturePawn(pos1: number, color: ChessColor, sim?: boolean) {
-    const availableMoves: [number, number, string][] = [];
+    const availableMoves: [number, number, MoveRef][] = [];
     if (color === "w") {
       //Capture upper left
       let n = tab120[tab64[pos1] - 11];
@@ -571,7 +571,7 @@ export class MovesController {
     return false;
   }
 
-  revertNumbsToCoords(results: [number, number, string][]): Move[] {
+  revertNumbsToCoords(results: [number, number, MoveRef][]): Move[] {
     return results.map((result) => ({
       from: this.revertCases.get(result[0]) ?? "",
       to: this.revertCases.get(result[1]) ?? "",

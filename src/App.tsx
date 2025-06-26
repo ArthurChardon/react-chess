@@ -11,6 +11,7 @@ import { Card } from "./components/ui/card";
 import { Button } from "./components/ui/button";
 import {
   RefreshCw,
+  Scroll,
   SkipBack,
   SkipForward,
   StepBack,
@@ -18,6 +19,7 @@ import {
 } from "lucide-react";
 import { useMoves } from "./context/MovesContext";
 import { Progress } from "./components/ui/progress";
+import { ScrollArea } from "./components/ui/scroll-area";
 
 function App() {
   const convertCases = new Map<string, number>();
@@ -29,6 +31,7 @@ function App() {
   const {
     displayedMoveIndex,
     pieceMaps,
+    movesNotation,
     firstDisplayedMoveIndex,
     prevDisplayedMoveIndex,
     nextDisplayedMoveIndex,
@@ -57,7 +60,47 @@ function App() {
       <div className="dark board-container bg-background">
         <Card className="w-full items-center">
           <div className="main-card-grid">
-            <Card className="col-start-1 col-end-2 p-4 bg-secondary"></Card>
+            <Card className="col-start-1 col-end-2 p-4 bg-secondary min-w-[300px]">
+              <div className="flex justify-between items-center text-white gap-[1rem] w-full mb-4">
+                <h3>Notation</h3>
+              </div>
+              <ScrollArea className="h-[40rem] rounded-md border p-4">
+                {movesNotation
+                  .reduce((notations, notation, index) => {
+                    if (index % 2 === 0) {
+                      notations.push([notation]);
+                    } else {
+                      notations[notations.length - 1].push(notation);
+                    }
+                    return notations;
+                  }, [] as string[][])
+                  .map((notation, index) => {
+                    return (
+                      <div
+                        key={"notation-" + index}
+                        className={
+                          "flex justify-start items-center text-white gap-[.5rem] w-full "
+                        }
+                      >
+                        <span className="text-lg">{index + 1}.</span>
+                        {notation.map((n, i) => (
+                          <span
+                            key={"notation-" + index + "-" + i}
+                            className={
+                              "text-lg" +
+                              (index * 2 + i + 1 === displayedMoveIndex
+                                ? " font-bold"
+                                : "")
+                            }
+                          >
+                            {n}
+                          </span>
+                        ))}
+                      </div>
+                    );
+                  })}
+              </ScrollArea>
+            </Card>
             <div
               className={
                 "col-start-2 col-end-3 flex justify-center items-center flex-col" +
