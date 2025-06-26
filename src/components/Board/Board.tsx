@@ -1,4 +1,4 @@
-import { RefObject, useRef, useState } from "react";
+import { RefObject, useEffect, useRef, useState } from "react";
 import { useDragLayer } from "react-dnd";
 
 import { initialBoard } from "../../utils/initialBoard";
@@ -9,6 +9,7 @@ import { ChessColor, ChessPieceType, PieceT } from "../../types/pieces";
 import { MovesController } from "../../utils/chessMoves";
 import Piece from "../Piece/Piece";
 import { Move } from "../../types/moves";
+import { useMoves } from "@/context/MovesContext";
 
 enum EndGame {
   WHITE_CM = "WHITE_CHECKMATE",
@@ -28,6 +29,15 @@ export default function Board({
   endgameReached: (endGame: EndGame | null) => void;
 }) {
   const promotionPieces: ChessPieceType[] = ["q", "r", "b", "n"];
+
+  const {
+    displayedMoveIndex,
+    pieceMaps,
+    addPieceMap,
+    updatePieceMaps,
+    firstDisplayedMoveIndex,
+  } = useMoves();
+
   const [pieceMap, setPieceMap] = useState(
     new Map<string, PieceT>(
       initialBoard.map((piece) => [
@@ -36,6 +46,22 @@ export default function Board({
       ])
     )
   );
+
+  const [whiteCheck, setWhiteCheck] = useState(false);
+  const [blackCheck, setBlackCheck] = useState(false);
+
+  const [promotionPick, setPromotionPick] = useState<{
+    fromCoords: string;
+    toCoords: string;
+    color: ChessColor;
+  } | null>(null);
+
+  const [playerToMove, setPlayerToMove] = useState<ChessColor | null>(() =>
+    freeMoves ? null : "w"
+  );
+
+  const [moveIndex, setMoveIndex] = useState(displayedMoveIndex);
+
   const castleStatus = useRef<{
     whiteCanOO: boolean;
     whiteCanOOO: boolean;
@@ -53,24 +79,23 @@ export default function Board({
   const selectableCells: RefObject<string[]> = useRef([]);
   const endGame: RefObject<EndGame | null> = useRef(null);
 
-  const [whiteCheck, setWhiteCheck] = useState(false);
-  const [blackCheck, setBlackCheck] = useState(false);
-
-  const [promotionPick, setPromotionPick] = useState<{
-    fromCoords: string;
-    toCoords: string;
-    color: ChessColor;
-  } | null>(null);
-
-  const [playerToMove, setPlayerToMove] = useState<ChessColor | null>(() =>
-    freeMoves ? null : "w"
-  );
-
   const { isDragging, item } = useDragLayer((monitor) => ({
     item: monitor.getItem(),
     itemType: monitor.getItemType(),
     isDragging: monitor.isDragging(),
   }));
+
+  useEffect(() => {
+    updatePieceMaps([pieceMap]);
+    firstDisplayedMoveIndex();
+  }, []);
+
+  if (moveIndex !== displayedMoveIndex) {
+    setMoveIndex(displayedMoveIndex);
+    setPieceMap(() => {
+      return pieceMaps[displayedMoveIndex];
+    });
+  }
 
   if (endGame.current === null) {
     if (freeMoves && playerToMove !== null) {
@@ -150,6 +175,21 @@ export default function Board({
     return legitMoves.includes(coords[0] + coords[1]);
   }
 
+  function updateMap(map: Map<string, PieceT>) {
+    setPieceMap(() => new Map(map));
+    addPieceMap(map);
+    setPlayerToMove((prev) => (prev === "w" ? "b" : "w"));
+    const controller = new MovesController(
+      map,
+      convertCases,
+      revertCases,
+      true,
+      {}
+    );
+    setWhiteCheck(controller.whiteCheck ?? false);
+    setBlackCheck(controller.blackCheck ?? false);
+  }
+
   function requestingMove(coords: [string, number]) {
     if (areCoordsLegitMove(coords, selectableCells.current)) {
       legitimateMoves.current.forEach((move) => {
@@ -185,13 +225,13 @@ export default function Board({
         if (piece) {
           switch (move.ref) {
             case "": {
-              // Default move
+              // classique move
               mapToUpdate.set(move.to, {
                 type: piece.type,
                 color: piece.color,
               });
               mapToUpdate.delete(move.from);
-              setPieceMap(() => new Map(mapToUpdate));
+              updateMap(mapToUpdate);
               break;
             }
 
@@ -204,7 +244,7 @@ export default function Board({
               mapToUpdate.set(rookCase, { type: "r", color: piece.color });
               mapToUpdate.delete(move.from);
               mapToUpdate.delete(piece.color === "w" ? "h1" : "h8");
-              setPieceMap(() => new Map(mapToUpdate));
+              updateMap(mapToUpdate);
               break;
             }
             case "OOO": {
@@ -216,7 +256,7 @@ export default function Board({
               mapToUpdate.set(rookCase, { type: "r", color: piece.color });
               mapToUpdate.delete(move.from);
               mapToUpdate.delete(piece.color === "w" ? "a1" : "a8");
-              setPieceMap(() => new Map(mapToUpdate));
+              updateMap(mapToUpdate);
               break;
             }
 
@@ -238,7 +278,7 @@ export default function Board({
               mapToUpdate.delete(move.from);
               enPassant.current =
                 move.to[0] + (Number(move.from[1]) + Number(move.from[1])) / 2;
-              setPieceMap(() => new Map(mapToUpdate));
+              updateMap(mapToUpdate);
               break;
             }
 
@@ -250,20 +290,10 @@ export default function Board({
               mapToUpdate.delete(move.from);
               const posPawn2 = piece.color === "w" ? -1 : 1;
               mapToUpdate.delete(move.to[0] + (Number(move.to[1]) + posPawn2));
-              setPieceMap(() => new Map(mapToUpdate));
+              updateMap(mapToUpdate);
               break;
             }
           }
-          setPlayerToMove((prev) => (prev === "w" ? "b" : "w"));
-          const controller = new MovesController(
-            mapToUpdate,
-            convertCases,
-            revertCases,
-            true,
-            {}
-          );
-          setWhiteCheck(controller.whiteCheck ?? false);
-          setBlackCheck(controller.blackCheck ?? false);
         }
       });
     }
@@ -283,12 +313,13 @@ export default function Board({
       type: pieceType,
       color: promotionPick!.color,
     });
-    setPieceMap(() => new Map(mapToUpdate));
+    updateMap(mapToUpdate);
     setPromotionPick(null);
   }
 
   return (
     <>
+      <div>{pieceMaps.length}</div>
       <div
         className={
           "board" +

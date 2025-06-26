@@ -16,6 +16,7 @@ import {
   StepBack,
   StepForward,
 } from "lucide-react";
+import { useMoves } from "./context/MovesContext";
 
 function App() {
   const convertCases = new Map<string, number>();
@@ -23,6 +24,15 @@ function App() {
   const [freeMoves, setFreeMoves] = useState(false);
   const [animateEndgame, setAnimateEndgame] = useState(false);
   const [boardKey, setBoardKey] = useState(0);
+
+  const {
+    displayedMoveIndex,
+    pieceMaps,
+    firstDisplayedMoveIndex,
+    prevDisplayedMoveIndex,
+    nextDisplayedMoveIndex,
+    lastDisplayedMoveIndex,
+  } = useMoves();
 
   let count = 0;
   for (const n in nbs) {
@@ -64,7 +74,6 @@ function App() {
                   endgameReached={(endGame) => {
                     if (!endGame) return;
                     triggerEndgameAnimation();
-                    console.log("Endgame reached:", endGame);
                   }}
                 />
               </DndProvider>
@@ -85,16 +94,39 @@ function App() {
                 >
                   <RefreshCw></RefreshCw>
                 </Button>
-                <Button aria-label="Premier coup">
+                <Button
+                  onClick={() => {
+                    firstDisplayedMoveIndex();
+                  }}
+                  aria-label="Premier coup"
+                >
                   <SkipBack></SkipBack>
                 </Button>
-                <Button aria-label="Coup précédent">
+                <Button
+                  disabled={displayedMoveIndex === 0}
+                  onClick={() => {
+                    prevDisplayedMoveIndex();
+                  }}
+                  aria-label="Coup précédent"
+                >
                   <StepBack></StepBack>
                 </Button>
-                <Button aria-label="Coup suivant">
+                <Button
+                  disabled={displayedMoveIndex === pieceMaps.length - 1}
+                  onClick={() => {
+                    nextDisplayedMoveIndex();
+                  }}
+                  aria-label="Coup suivant"
+                >
                   <StepForward></StepForward>
                 </Button>
-                <Button aria-label="Dernier coup">
+                <Button
+                  disabled={displayedMoveIndex === pieceMaps.length - 1}
+                  onClick={() => {
+                    lastDisplayedMoveIndex();
+                  }}
+                  aria-label="Dernier coup"
+                >
                   <SkipForward></SkipForward>
                 </Button>
               </div>
