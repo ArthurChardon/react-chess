@@ -18,6 +18,8 @@ import {
   SkipForward,
   StepBack,
   StepForward,
+  Volume2,
+  VolumeOff,
 } from "lucide-react";
 import { useMoves } from "./context/MovesContext";
 import { Progress } from "./components/ui/progress";
@@ -39,6 +41,9 @@ function App() {
     availableMoves,
     activateAvailableMoves,
     deactivateAvailableMoves,
+    soundEffects,
+    activateSoundEffects,
+    deactivateSoundEffects,
   } = useUISettings();
 
   const {
@@ -87,14 +92,14 @@ function App() {
   return (
     <>
       <div className="dark board-container bg-background">
-        <Card className="w-full items-center">
+        <Card className="w-full items-center h-[80vh]">
           <div className="main-card-grid">
             <Card className="col-start-1 col-end-2 p-4 bg-secondary min-w-[300px]">
               <div className="flex justify-between items-center text-white gap-[1rem] w-full mb-4">
                 <h3>Notation</h3>
                 <BookOpenText></BookOpenText>
               </div>
-              <ScrollArea className="h-[40rem] rounded-md border p-4">
+              <ScrollArea className="grow-1 rounded-md border p-4 min-h-0">
                 {movesNotation
                   .reduce((notations, notation, index) => {
                     if (index % 2 === 0) {
@@ -209,7 +214,7 @@ function App() {
 
             <Card className="col-start-3 ml-auto p-4 bg-secondary">
               <div className="flex justify-between items-center text-white gap-[1rem] w-full mb-4">
-                <h3>Options</h3>
+                <h3>Options de jeu</h3>
                 <Cog></Cog>
               </div>
               <div className="flex justify-between items-center text-white gap-[1rem] w-fit ">
@@ -222,7 +227,7 @@ function App() {
                 <h4>Coups libres</h4>
               </div>
               <div className="flex justify-between items-center text-white gap-[1rem] w-full mt-auto mb-4">
-                <h3>Affichage</h3>
+                <h3>Affichage & Son</h3>
                 <Eye></Eye>
               </div>
               <div className="flex justify-between items-center text-white gap-[1rem] w-fit ">
@@ -242,6 +247,23 @@ function App() {
                     triggerAvailableMoves();
                   }}
                 ></Checkbox>
+              </div>
+              <div className="flex justify-between items-center text-white gap-[1rem] w-fit ">
+                <h4>Effets sonores</h4>
+                <button
+                  className="volume-button"
+                  onClick={() => deactivateSoundEffects()}
+                  style={{ display: soundEffects ? "block" : "none" }}
+                >
+                  <Volume2></Volume2>
+                </button>
+                <button
+                  className="volume-button"
+                  onClick={() => activateSoundEffects()}
+                  style={{ display: !soundEffects ? "block" : "none" }}
+                >
+                  <VolumeOff></VolumeOff>
+                </button>
               </div>
             </Card>
           </div>

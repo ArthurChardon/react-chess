@@ -16,9 +16,11 @@
 }
 
 .main-card-grid {
+  height: 100%;
   width: 100%;
   display: grid;
   grid-template-columns: auto 1fr auto;
+  grid-template-rows: 100%;
   gap: 1rem;
   padding: 1rem;
   justify-items: center;
@@ -62,5 +64,11 @@
   100% {
     -webkit-transform: translate(0);
     transform: translate(0);
+  }
+}
+
+.volume-button {
+  &:active {
+    outline: none;
   }
 }

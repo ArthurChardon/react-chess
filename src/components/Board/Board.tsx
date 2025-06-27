@@ -13,6 +13,7 @@ import { useMoves } from "@/context/MovesContext";
 import { generateNotationFromMove } from "@/utils/movesNotations";
 import { useCellSelection } from "@/context/CellSelectionContext";
 import useSound from "use-sound";
+import { useUISettings } from "@/context/UISettingsContext";
 
 enum EndGame {
   WHITE_CM = "WHITE_CHECKMATED",
@@ -46,6 +47,8 @@ export default function Board({
   } = useMoves();
 
   const { selectedCell, selectCell, deselectAllCells } = useCellSelection();
+
+  const { soundEffects } = useUISettings();
 
   const [playCoupVar1] = useSound("/sounds/coup-1.wav", {
     volume: SOUND_VOLUME,
@@ -395,6 +398,8 @@ export default function Board({
     check: boolean,
     checkmate: boolean
   ) {
+    if (!soundEffects) return;
+
     if (castle) {
       playCastle();
       return;

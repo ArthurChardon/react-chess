@@ -7,6 +7,9 @@ interface UISettingsContextType {
   availableMoves: boolean;
   activateAvailableMoves: () => void;
   deactivateAvailableMoves: () => void;
+  soundEffects: boolean;
+  activateSoundEffects: () => void;
+  deactivateSoundEffects: () => void;
 }
 
 const UISettingsContext = createContext<UISettingsContextType | null>(null);
@@ -14,6 +17,7 @@ const UISettingsContext = createContext<UISettingsContextType | null>(null);
 export function UISettingsProvider({ children }: { children: ReactNode }) {
   const [caseLabels, setCaseLabels] = useState<boolean>(true);
   const [availableMoves, setAvailableMoves] = useState<boolean>(true);
+  const [soundEffects, setSoundEffects] = useState<boolean>(true);
 
   const activateCaseLabels = () => {
     setCaseLabels(true);
@@ -31,6 +35,14 @@ export function UISettingsProvider({ children }: { children: ReactNode }) {
     setAvailableMoves(false);
   };
 
+  const activateSoundEffects = () => {
+    setSoundEffects(true);
+  };
+
+  const deactivateSoundEffects = () => {
+    setSoundEffects(false);
+  };
+
   const value = {
     caseLabels,
     activateCaseLabels,
@@ -38,6 +50,9 @@ export function UISettingsProvider({ children }: { children: ReactNode }) {
     availableMoves,
     activateAvailableMoves,
     deactivateAvailableMoves,
+    soundEffects,
+    activateSoundEffects,
+    deactivateSoundEffects,
   };
 
   return (
