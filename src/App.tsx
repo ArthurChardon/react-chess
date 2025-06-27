@@ -32,8 +32,14 @@ function App() {
   const [animateEndgame, setAnimateEndgame] = useState(false);
   const [boardKey, setBoardKey] = useState(0);
 
-  const { caseLabels, activateCaseLabels, deactivateCaseLabels } =
-    useUISettings();
+  const {
+    caseLabels,
+    activateCaseLabels,
+    deactivateCaseLabels,
+    availableMoves,
+    activateAvailableMoves,
+    deactivateAvailableMoves,
+  } = useUISettings();
 
   const {
     displayedMoveIndex,
@@ -67,6 +73,14 @@ function App() {
       deactivateCaseLabels();
     } else {
       activateCaseLabels();
+    }
+  }
+
+  function triggerAvailableMoves() {
+    if (availableMoves) {
+      deactivateAvailableMoves();
+    } else {
+      activateAvailableMoves();
     }
   }
 
@@ -217,6 +231,15 @@ function App() {
                   checked={caseLabels}
                   onCheckedChange={() => {
                     triggerCaseLabels();
+                  }}
+                ></Checkbox>
+              </div>
+              <div className="flex justify-between items-center text-white gap-[1rem] w-fit ">
+                <h4>Mouvements possibles</h4>
+                <Checkbox
+                  checked={availableMoves}
+                  onCheckedChange={() => {
+                    triggerAvailableMoves();
                   }}
                 ></Checkbox>
               </div>

@@ -4,12 +4,16 @@ interface UISettingsContextType {
   caseLabels: boolean;
   activateCaseLabels: () => void;
   deactivateCaseLabels: () => void;
+  availableMoves: boolean;
+  activateAvailableMoves: () => void;
+  deactivateAvailableMoves: () => void;
 }
 
 const UISettingsContext = createContext<UISettingsContextType | null>(null);
 
 export function UISettingsProvider({ children }: { children: ReactNode }) {
   const [caseLabels, setCaseLabels] = useState<boolean>(true);
+  const [availableMoves, setAvailableMoves] = useState<boolean>(true);
 
   const activateCaseLabels = () => {
     setCaseLabels(true);
@@ -19,10 +23,21 @@ export function UISettingsProvider({ children }: { children: ReactNode }) {
     setCaseLabels(false);
   };
 
+  const activateAvailableMoves = () => {
+    setAvailableMoves(true);
+  };
+
+  const deactivateAvailableMoves = () => {
+    setAvailableMoves(false);
+  };
+
   const value = {
     caseLabels,
     activateCaseLabels,
     deactivateCaseLabels,
+    availableMoves,
+    activateAvailableMoves,
+    deactivateAvailableMoves,
   };
 
   return (

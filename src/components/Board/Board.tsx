@@ -12,12 +12,15 @@ import { Move } from "../../types/moves";
 import { useMoves } from "@/context/MovesContext";
 import { generateNotationFromMove } from "@/utils/movesNotations";
 import { useCellSelection } from "@/context/CellSelectionContext";
+import useSound from "use-sound";
 
 enum EndGame {
   WHITE_CM = "WHITE_CHECKMATED",
   BLACK_CM = "BLACK_CHECKMATED",
   DRAW = "DRAW",
 }
+
+const SOUND_VOLUME = 0.5;
 
 export default function Board({
   convertCases,
@@ -43,6 +46,31 @@ export default function Board({
   } = useMoves();
 
   const { selectedCell, selectCell, deselectAllCells } = useCellSelection();
+
+  const [playCoupVar1] = useSound("/sounds/coup-1.wav", {
+    volume: SOUND_VOLUME,
+  });
+  const [playCoupVar2] = useSound("/sounds/coup-2.wav", {
+    volume: SOUND_VOLUME,
+  });
+  const [playCoupVar3] = useSound("/sounds/coup-3.wav", {
+    volume: SOUND_VOLUME,
+  });
+  const [playCoupVar4] = useSound("/sounds/coup-4.wav", {
+    volume: SOUND_VOLUME,
+  });
+  const [playPrise] = useSound("/sounds/prise-1.wav", { volume: SOUND_VOLUME });
+  const [playPriseCheck] = useSound("/sounds/prise-check.wav", {
+    volume: SOUND_VOLUME,
+  });
+  const [playCheck] = useSound("/sounds/check.wav", { volume: SOUND_VOLUME });
+  const [playCheckmate] = useSound("/sounds/checkmate.wav", {
+    volume: SOUND_VOLUME,
+  });
+  const [playPriseCheckmate] = useSound("/sounds/checkmate-prise.wav", {
+    volume: SOUND_VOLUME,
+  });
+  const [playCastle] = useSound("/sounds/castle.wav", { volume: SOUND_VOLUME });
 
   const [pieceMap, setPieceMap] = useState(
     new Map<string, PieceT>(
@@ -189,12 +217,17 @@ export default function Board({
     );
     setWhiteCheck(controller.whiteCheck ?? false);
     setBlackCheck(controller.blackCheck ?? false);
-    addMovesNotation(
-      generateNotationFromMove(
-        move,
-        pieceMap,
-        controller.whiteCheck || controller.blackCheck
-      )
+    const notation = generateNotationFromMove(
+      move,
+      pieceMap,
+      controller.whiteCheck || controller.blackCheck
+    );
+    addMovesNotation(notation);
+    playSound(
+      notation.includes("x"),
+      notation.includes("O"),
+      notation.includes("+"),
+      notation.includes("#")
     );
   }
 
@@ -344,14 +377,65 @@ export default function Board({
     if (movesCount === 0) {
       if (playerToMove === "w" && whiteCheck) {
         endGame.current = EndGame.WHITE_CM;
-        lastMoveNotationCheckmate("b");
+        setTimeout(() => lastMoveNotationCheckmate("b"), 0);
       } else if (playerToMove === "b" && blackCheck) {
         endGame.current = EndGame.BLACK_CM;
-        lastMoveNotationCheckmate("w");
+        setTimeout(() => lastMoveNotationCheckmate("w"), 0);
       } else {
         endGame.current = EndGame.DRAW;
       }
       setTimeout(() => endgameReached(endGame.current), 0);
+      playSound(false, false, false, true);
+    }
+  }
+
+  function playSound(
+    prise: boolean,
+    castle: boolean,
+    check: boolean,
+    checkmate: boolean
+  ) {
+    if (castle) {
+      playCastle();
+      return;
+    }
+
+    if (prise) {
+      if (check) {
+        playPriseCheck();
+        return;
+      }
+      if (checkmate) {
+        playPriseCheckmate();
+        return;
+      }
+      playPrise();
+      return;
+    }
+    if (check) {
+      playCheck();
+      return;
+    }
+    if (checkmate) {
+      playCheckmate();
+    }
+    const randomVar = Math.floor(Math.random() * 4);
+    switch (randomVar) {
+      case 0:
+        playCoupVar1();
+        return;
+
+      case 1:
+        playCoupVar2();
+        return;
+
+      case 2:
+        playCoupVar3();
+        return;
+
+      case 3:
+        playCoupVar4();
+        return;
     }
   }
 

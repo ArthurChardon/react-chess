@@ -28,7 +28,7 @@ export default function Cell({
   isChecked?: boolean;
   isCheckmated?: boolean;
 }) {
-  const { caseLabels: caseLabels } = useUISettings();
+  const { caseLabels, availableMoves } = useUISettings();
   const { selectedCell, toggleCell } = useCellSelection();
 
   const [{ isOver }, dropRef] = useDrop(
@@ -126,6 +126,7 @@ export default function Cell({
         <div
           style={{
             position: "absolute",
+            display: availableMoves ? "block" : "none",
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
