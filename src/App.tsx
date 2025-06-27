@@ -10,8 +10,10 @@ import { useState } from "react";
 import { Card } from "./components/ui/card";
 import { Button } from "./components/ui/button";
 import {
+  BookOpenText,
+  Cog,
+  Eye,
   RefreshCw,
-  Scroll,
   SkipBack,
   SkipForward,
   StepBack,
@@ -20,6 +22,8 @@ import {
 import { useMoves } from "./context/MovesContext";
 import { Progress } from "./components/ui/progress";
 import { ScrollArea } from "./components/ui/scroll-area";
+import { Checkbox } from "./components/ui/checkbox";
+import { useUISettings } from "./context/UISettingsContext";
 
 function App() {
   const convertCases = new Map<string, number>();
@@ -27,6 +31,9 @@ function App() {
   const [freeMoves, setFreeMoves] = useState(false);
   const [animateEndgame, setAnimateEndgame] = useState(false);
   const [boardKey, setBoardKey] = useState(0);
+
+  const { caseLabels, activateCaseLabels, deactivateCaseLabels } =
+    useUISettings();
 
   const {
     displayedMoveIndex,
@@ -55,6 +62,14 @@ function App() {
     setAnimateEndgame(true);
   }
 
+  function triggerCaseLabels() {
+    if (caseLabels) {
+      deactivateCaseLabels();
+    } else {
+      activateCaseLabels();
+    }
+  }
+
   return (
     <>
       <div className="dark board-container bg-background">
@@ -63,6 +78,7 @@ function App() {
             <Card className="col-start-1 col-end-2 p-4 bg-secondary min-w-[300px]">
               <div className="flex justify-between items-center text-white gap-[1rem] w-full mb-4">
                 <h3>Notation</h3>
+                <BookOpenText></BookOpenText>
               </div>
               <ScrollArea className="h-[40rem] rounded-md border p-4">
                 {movesNotation
@@ -128,19 +144,12 @@ function App() {
                   }}
                 />
               </DndProvider>
-            </div>
-
-            <Card className="col-start-3 ml-auto p-4 bg-secondary">
-              <div className="flex justify-between items-center text-white gap-[1rem] w-full mb-4">
-                <h3>Options</h3>
-              </div>
-              <div className="flex justify-between items-center text-white gap-[.5rem] w-full ">
-                <h4>Partie</h4>
+              <div className="flex justify-center items-center text-white gap-[.5rem] w-full mt-[1rem]">
+                {" "}
                 <Button
                   onClick={() => {
                     startNewGame();
                   }}
-                  className="ml-auto"
                   aria-label="Relancer la partie"
                 >
                   <RefreshCw></RefreshCw>
@@ -182,6 +191,13 @@ function App() {
                   <SkipForward></SkipForward>
                 </Button>
               </div>
+            </div>
+
+            <Card className="col-start-3 ml-auto p-4 bg-secondary">
+              <div className="flex justify-between items-center text-white gap-[1rem] w-full mb-4">
+                <h3>Options</h3>
+                <Cog></Cog>
+              </div>
               <div className="flex justify-between items-center text-white gap-[1rem] w-fit ">
                 <h4>Coups alternés</h4>
                 <Switch
@@ -190,6 +206,19 @@ function App() {
                   }}
                 ></Switch>
                 <h4>Coups libres</h4>
+              </div>
+              <div className="flex justify-between items-center text-white gap-[1rem] w-full mt-auto mb-4">
+                <h3>Affichage</h3>
+                <Eye></Eye>
+              </div>
+              <div className="flex justify-between items-center text-white gap-[1rem] w-fit ">
+                <h4>Cases labellisées</h4>
+                <Checkbox
+                  checked={caseLabels}
+                  onCheckedChange={() => {
+                    triggerCaseLabels();
+                  }}
+                ></Checkbox>
               </div>
             </Card>
           </div>

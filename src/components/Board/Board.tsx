@@ -11,6 +11,7 @@ import Piece from "../Piece/Piece";
 import { Move } from "../../types/moves";
 import { useMoves } from "@/context/MovesContext";
 import { generateNotationFromMove } from "@/utils/movesNotations";
+import { useCellSelection } from "@/context/CellSelectionContext";
 
 enum EndGame {
   WHITE_CM = "WHITE_CHECKMATED",
@@ -41,6 +42,8 @@ export default function Board({
     lastMoveNotationCheckmate,
   } = useMoves();
 
+  const { selectedCell, selectCell, deselectAllCells } = useCellSelection();
+
   const [pieceMap, setPieceMap] = useState(
     new Map<string, PieceT>(
       initialBoard.map((piece) => [
@@ -62,7 +65,6 @@ export default function Board({
   const [playerToMove, setPlayerToMove] = useState<ChessColor | null>(() =>
     freeMoves ? null : "w"
   );
-
   const [moveIndex, setMoveIndex] = useState(displayedMoveIndex);
 
   const castleStatus = useRef<{
@@ -77,7 +79,6 @@ export default function Board({
     blackCanOOO: true,
   });
   const enPassant = useRef("");
-  const draggingPositionComputed = useRef(false);
   const legitimateMoves: RefObject<Move[]> = useRef([]);
   const selectableCells: RefObject<string[]> = useRef([]);
   const endGame: RefObject<EndGame | null> = useRef(null);
@@ -107,33 +108,29 @@ export default function Board({
       setPlayerToMove("w");
     }
 
-    if (playerToMove !== null) {
-      const controller = new MovesController(
-        pieceMap,
-        convertCases,
-        revertCases,
-        true,
-        {}
-      );
+    computeEndGame(playerToMove);
 
-      const movesCount = controller.availableMovesCount(playerToMove);
-      if (movesCount === 0) {
-        if (playerToMove === "w" && whiteCheck) {
-          endGame.current = EndGame.WHITE_CM;
-          lastMoveNotationCheckmate("b");
-        } else if (playerToMove === "b" && blackCheck) {
-          endGame.current = EndGame.BLACK_CM;
-          lastMoveNotationCheckmate("w");
-        } else {
-          endGame.current = EndGame.DRAW;
-        }
-        setTimeout(() => endgameReached(endGame.current), 0);
+    let piece: PieceT | null = null;
+    let pieceCoords = "";
+
+    if (
+      isDragging &&
+      item &&
+      selectedCell?.coords.join("") !== item.coords.join("")
+    ) {
+      setTimeout(() => selectCell(item.coords, true), 0);
+    }
+
+    if (selectedCell) {
+      const pieceFromCoords = getPieceFromCoords(selectedCell.coords);
+      if (pieceFromCoords) {
+        piece = pieceFromCoords;
+        pieceCoords =
+          selectedCell.coords[0] + selectedCell.coords[1].toString();
       }
     }
 
-    if (isDragging && !draggingPositionComputed.current && castleStatus) {
-      const piece = item.piece as PieceT;
-      const pieceCoords = item.coords.join("");
+    if (piece) {
       const pieceColor = piece.color;
       const pieceValue = piece.type;
       if (playerToMove === null || pieceColor === playerToMove) {
@@ -153,7 +150,6 @@ export default function Board({
             playerToMove,
           }
         );
-        draggingPositionComputed.current = true;
         legitimateMoves.current = controller.availableMovesFrom(
           pieceValue,
           pieceColor,
@@ -165,8 +161,7 @@ export default function Board({
       }
     }
 
-    if (!isDragging) {
-      draggingPositionComputed.current = false;
+    if (!isDragging && !selectedCell) {
       legitimateMoves.current = [];
       selectableCells.current = [];
     }
@@ -181,6 +176,7 @@ export default function Board({
   }
 
   function updateMap(map: Map<string, PieceT>, move: Move) {
+    deselectAllCells();
     setPieceMap(() => new Map(map));
     addPieceMap(map);
     setPlayerToMove((prev) => (prev === "w" ? "b" : "w"));
@@ -333,6 +329,32 @@ export default function Board({
     setPromotionPick(null);
   }
 
+  function computeEndGame(playerToMove: ChessColor | null) {
+    if (playerToMove === null) return;
+
+    const controller = new MovesController(
+      pieceMap,
+      convertCases,
+      revertCases,
+      true,
+      {}
+    );
+
+    const movesCount = controller.availableMovesCount(playerToMove);
+    if (movesCount === 0) {
+      if (playerToMove === "w" && whiteCheck) {
+        endGame.current = EndGame.WHITE_CM;
+        lastMoveNotationCheckmate("b");
+      } else if (playerToMove === "b" && blackCheck) {
+        endGame.current = EndGame.BLACK_CM;
+        lastMoveNotationCheckmate("w");
+      } else {
+        endGame.current = EndGame.DRAW;
+      }
+      setTimeout(() => endgameReached(endGame.current), 0);
+    }
+  }
+
   return (
     <>
       <div
@@ -348,16 +370,11 @@ export default function Board({
         {promotionPick && (
           <div className="promotion-pick">
             {promotionPieces.map((pieceType) => (
-              <button
-                className="functional-button"
-                onClick={() => {
-                  promotePieceTo(promotionPick, pieceType);
-                }}
-              >
-                <Piece
-                  piece={{ type: pieceType, color: promotionPick.color }}
-                ></Piece>
-              </button>
+              <Piece
+                key={pieceType}
+                clicked={() => promotePieceTo(promotionPick, pieceType)}
+                piece={{ type: pieceType, color: promotionPick.color }}
+              ></Piece>
             ))}
           </div>
         )}
@@ -370,8 +387,8 @@ export default function Board({
                 <Cell
                   key={x.toString() + "-" + y}
                   coords={[y, x]}
-                  annotation={x === 1 ? y : ""}
-                  secondAnnotation={y === "h" ? x.toString() : ""}
+                  caseLabel={x === 1 ? y : ""}
+                  secondCaseLabel={y === "h" ? x.toString() : ""}
                   dark={(i + j) % 2 === 1}
                   piece={getPieceFromCoords([y, x])}
                   legitMove={areCoordsLegitMove(

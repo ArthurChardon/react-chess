@@ -16,10 +16,12 @@ export default function Piece({
   piece,
   coords,
   draggable = false,
+  clicked,
 }: {
   piece?: PieceT;
   coords?: [string, number];
   draggable?: boolean;
+  clicked?: () => void;
 }) {
   const [{ isDragging }, dragRef, preview] = useDrag(
     () => ({
@@ -44,16 +46,17 @@ export default function Piece({
 
   return (
     <>
-      <div
+      <button
         className="z-10"
         ref={draggable ? dragRef : null}
         style={getStyles(isDragging)}
+        onClick={() => (clicked ? clicked() : null)}
       >
         <img
           className={"piece-cell " + (isDragging ? "dragged" : "")}
           src={srcImage}
         />
-      </div>
+      </button>
     </>
   );
 }

@@ -3,11 +3,14 @@ import { useDrop } from "react-dnd";
 import "./Cell.css";
 import Piece from "../Piece/Piece";
 import { PieceT } from "../../types/pieces";
+import { useUISettings } from "@/context/UISettingsContext";
+import { useRef } from "react";
+import { useCellSelection } from "@/context/CellSelectionContext";
 
 export default function Cell({
   coords,
-  annotation,
-  secondAnnotation,
+  caseLabel,
+  secondCaseLabel,
   dark,
   piece,
   legitMove,
@@ -16,8 +19,8 @@ export default function Cell({
   isCheckmated = false,
 }: {
   coords: [string, number];
-  annotation?: string;
-  secondAnnotation?: string;
+  caseLabel?: string;
+  secondCaseLabel?: string;
   dark?: boolean;
   piece?: PieceT;
   legitMove: boolean;
@@ -25,6 +28,9 @@ export default function Cell({
   isChecked?: boolean;
   isCheckmated?: boolean;
 }) {
+  const { caseLabels: caseLabels } = useUISettings();
+  const { selectedCell, toggleCell } = useCellSelection();
+
   const [{ isOver }, dropRef] = useDrop(
     () => ({
       accept: "piece",
@@ -36,8 +42,29 @@ export default function Cell({
     [coords]
   );
 
+  const cellButton = useRef<HTMLButtonElement>(null);
+
   function requestingMoveToSelf(newCoords: [string, number]) {
     requestMove(newCoords);
+    cellButton.current?.focus();
+    cellButton.current?.blur();
+  }
+
+  function pieceClicked() {
+    cellClicked();
+    cellButton.current?.focus();
+  }
+
+  function cellClicked() {
+    if (legitMove) {
+      requestMove(coords);
+      return;
+    }
+    toggleCell(coords, !!piece);
+  }
+
+  if (!selectedCell || selectedCell.coords.join("") != coords.join("")) {
+    cellButton.current?.blur();
   }
 
   return (
@@ -51,22 +78,36 @@ export default function Cell({
       ref={dropRef}
     >
       <div
-        className="annotation"
+        className="case-label"
         style={{
+          display: caseLabels ? "block" : "none",
           bottom: "0.2em",
         }}
       >
-        {annotation}
+        {caseLabel}
       </div>
       <div
-        className="annotation"
+        className="case-label"
         style={{
+          display: caseLabels ? "block" : "none",
           top: "0.2em",
         }}
       >
-        {secondAnnotation}
+        {secondCaseLabel}
       </div>
-      {piece && <Piece piece={piece} coords={coords} draggable={true}></Piece>}
+      <button
+        onClick={() => cellClicked()}
+        className="cell-button"
+        ref={cellButton}
+      ></button>
+      {piece && (
+        <Piece
+          clicked={() => pieceClicked()}
+          piece={piece}
+          coords={coords}
+          draggable={true}
+        ></Piece>
+      )}
       {isOver && legitMove && (
         <div
           style={{
@@ -81,7 +122,7 @@ export default function Cell({
           }}
         />
       )}
-      {!isOver && legitMove && (
+      {legitMove && (
         <div
           style={{
             position: "absolute",
@@ -92,6 +133,7 @@ export default function Cell({
             width: "25%",
             zIndex: 20,
             opacity: 0.35,
+            pointerEvents: "none",
             backgroundColor: "grey",
             borderRadius: "50%",
           }}

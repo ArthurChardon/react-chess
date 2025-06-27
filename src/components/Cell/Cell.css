@@ -35,6 +35,23 @@
     transform: translate(-50%, -50%);
     animation: checked 0.25s ease-in-out;
   }
+
+  .cell-button {
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: #888;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  button:focus {
+    outline: none;
+    opacity: 0.75;
+  }
 }
 
 .dark-cell {
@@ -79,7 +96,7 @@
   }
 }
 
-.annotation {
+.case-label {
   position: absolute;
   display: block;
   pointer-events: none;
