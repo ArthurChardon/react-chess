@@ -48,6 +48,7 @@ export default function Piece({
     <>
       <button
         className="z-10"
+        //@ts-expect-error
         ref={draggable ? dragRef : null}
         style={getStyles(isDragging)}
         onClick={() => (clicked ? clicked() : null)}

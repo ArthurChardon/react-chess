@@ -75,6 +75,7 @@ export default function Cell({
         (isChecked && !isCheckmated ? " checked" : "") +
         (isCheckmated ? " mated" : "")
       }
+      //@ts-expect-error
       ref={dropRef}
     >
       <div

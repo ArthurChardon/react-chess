@@ -33,14 +33,15 @@ function getItemStyles(
 }
 
 export default function DragLayer() {
-  const { itemType, isDragging, item, initialOffset, currentOffset } =
-    useDragLayer((monitor) => ({
+  const { isDragging, item, initialOffset, currentOffset } = useDragLayer(
+    (monitor) => ({
       item: monitor.getItem(),
       itemType: monitor.getItemType(),
       initialOffset: monitor.getInitialSourceClientOffset(),
       currentOffset: monitor.getSourceClientOffset(),
       isDragging: monitor.isDragging(),
-    }));
+    })
+  );
 
   function renderItem(item: any) {
     return <Piece piece={{ ...item.piece }} key={new Date().getTime()} />;
